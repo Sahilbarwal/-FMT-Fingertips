@@ -24,6 +24,7 @@ import {
   FileText,
   LogOut,
   Trash2,
+  Pencil,
   Search,
   X,
 } from "lucide-react";
@@ -36,6 +37,8 @@ const API_URL = "http://127.0.0.1:8000/ask/";
 const CHAT_STORAGE_KEY = "fmt_recent_chats";
 
 export default function Chat() {
+  const location = useLocation();
+
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [level, setLevel] = useState("PG");
@@ -59,6 +62,7 @@ export default function Chat() {
 
   const chatEndRef = useRef(null);
   const textareaRef = useRef(null);
+  const hasHandledIncomingQuestion = useRef(false);
 
   // =========================================================
   // LOAD SAVED CHATS
@@ -79,6 +83,38 @@ export default function Chat() {
       console.error("Could not load recent chats:", error);
     }
   }, []);
+
+  // =========================================================
+  // AUTO-SEND A QUESTION HANDED OFF FROM HOME
+  // (Home.jsx navigates here with navigate("/chat", { state:
+  // { question, level, fromHome: true } }) — pick that up once
+  // on mount, set the matching level, and send it immediately
+  // instead of leaving it sitting in the input box.)
+  // =========================================================
+
+  useEffect(() => {
+    const incomingQuestion = location.state?.question;
+
+    if (!incomingQuestion) return;
+
+    if (hasHandledIncomingQuestion.current) return;
+    hasHandledIncomingQuestion.current = true;
+
+    const incomingLevel = location.state?.level;
+
+    if (incomingLevel) {
+      setLevel(incomingLevel);
+    }
+
+    sendQuestion(incomingQuestion, incomingLevel);
+
+    // Clear the navigation state so refreshing /chat or
+    // navigating back here later doesn't resend the same
+    // question again.
+    window.history.replaceState({}, document.title);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   // =========================================================
   // SCROLL TO LATEST MESSAGE
@@ -383,8 +419,16 @@ export default function Chat() {
   // SEND QUESTION
   // =========================================================
 
-  const sendQuestion = async () => {
-    const trimmedQuestion = question.trim();
+  const sendQuestion = async (
+    overrideText,
+    overrideLevel
+  ) => {
+    const trimmedQuestion = (
+      overrideText ?? question
+    ).trim();
+
+    const effectiveLevel =
+      overrideLevel ?? level;
 
     if (!trimmedQuestion || loading) {
       return;
@@ -417,7 +461,7 @@ export default function Chat() {
       const newChat = createChat(
         trimmedQuestion,
         messagesWithUser,
-        level
+        effectiveLevel
       );
 
       currentChatId = newChat.id;
@@ -456,7 +500,7 @@ export default function Chat() {
 
           body: JSON.stringify({
             question: trimmedQuestion,
-            level: level,
+            level: effectiveLevel,
           }),
         }
       );
@@ -617,6 +661,37 @@ export default function Chat() {
         behavior: "smooth",
       });
     }, 100);
+  };
+
+  // =========================================================
+  // RENAME CHAT
+  // =========================================================
+
+  const renameChat = (event, chat) => {
+    event.stopPropagation();
+
+    const newTitle = window.prompt(
+      "Rename chat",
+      chat.title
+    );
+
+    setOpenChatMenu(null);
+
+    if (!newTitle || !newTitle.trim()) {
+      return;
+    }
+
+    setRecentChats((prevChats) => {
+      const updatedChats = prevChats.map((c) =>
+        c.id === chat.id
+          ? { ...c, title: newTitle.trim() }
+          : c
+      );
+
+      persistChats(updatedChats);
+
+      return updatedChats;
+    });
   };
 
   // =========================================================
@@ -873,27 +948,15 @@ export default function Chat() {
 
                     <button
                       className="recent-chat-main"
+                      title={chat.title}
                       onClick={() =>
                         openChat(chat)
                       }
                     >
 
-                      <MessageSquare
-                        size={18}
-                      />
-
-                      <div className="recent-chat-text">
-
-                        <strong>
-                          {chat.title}
-                        </strong>
-
-                        <span>
-                          {chat.time ||
-                            "Recent"}
-                        </span>
-
-                      </div>
+                      <span className="recent-chat-title">
+                        {chat.title}
+                      </span>
 
                     </button>
 
@@ -901,7 +964,11 @@ export default function Chat() {
                     {/* THREE DOT BUTTON */}
 
                     <button
-                      className="chat-options-btn"
+                      className={
+                        openChatMenu === chat.id
+                          ? "chat-options-btn menu-open"
+                          : "chat-options-btn"
+                      }
                       onClick={(event) => {
                         event.stopPropagation();
 
@@ -921,7 +988,7 @@ export default function Chat() {
                     </button>
 
 
-                    {/* DELETE MENU */}
+                    {/* CHAT OPTIONS MENU */}
 
                     {openChatMenu ===
                       chat.id && (
@@ -931,6 +998,27 @@ export default function Chat() {
                       >
 
                         <button
+                          onClick={(event) =>
+                            renameChat(
+                              event,
+                              chat
+                            )
+                          }
+                        >
+
+                          <Pencil
+                            size={16}
+                          />
+
+                          <span>
+                            Rename
+                          </span>
+
+                        </button>
+
+
+                        <button
+                          className="delete-option"
                           onClick={(event) =>
                             deleteChat(
                               event,
