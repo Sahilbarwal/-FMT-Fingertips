@@ -1,79 +1,21 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.http import JsonResponse
 
-from accounts import views
+
+def home(request):
+    return JsonResponse({
+        "status": "Backend is running successfully"
+    })
 
 
 urlpatterns = [
+    # Home / health check
+    path("", home, name="home"),
 
-    # ========================================================
-    # ADMIN
-    # ========================================================
+    # Django admin
+    path("admin/", admin.site.urls),
 
-    path(
-        "admin/",
-        admin.site.urls
-    ),
-
-
-    # ========================================================
-    # AUTHENTICATION
-    # ========================================================
-
-    path(
-        "register/",
-        views.register,
-        name="register"
-    ),
-
-    path(
-        "login/",
-        views.login,
-        name="login"
-    ),
-
-    path(
-        "logout/",
-        views.logout,
-        name="logout"
-    ),
-
-
-    # ========================================================
-    # USER / PROFILE
-    # ========================================================
-
-    path(
-        "me/",
-        views.me,
-        name="me"
-    ),
-
-    path(
-        "profile/",
-        views.me,
-        name="profile"
-    ),
-
-
-    # ========================================================
-    # SEARCH HISTORY
-    # ========================================================
-
-    path(
-        "history/",
-        views.history,
-        name="history"
-    ),
-
-
-    # ========================================================
-    # FMT AI ASSISTANT
-    # ========================================================
-
-    path(
-        "ask/",
-        views.ask,
-        name="ask"
-    ),
+    # Accounts app URLs
+    path("", include("accounts.urls")),
 ]
