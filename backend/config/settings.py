@@ -34,7 +34,7 @@ SECRET_KEY = os.getenv(
 
 DEBUG = os.getenv(
     "DJANGO_DEBUG",
-    "True"
+    "False"
 ).lower() == "true"
 
 
@@ -42,11 +42,10 @@ DEBUG = os.getenv(
 # ALLOWED HOSTS
 # ============================================================
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-]
-
+ALLOWED_HOSTS = os.getenv(
+    "DJANGO_ALLOWED_HOSTS",
+    "127.0.0.1,localhost"
+).split(",")
 
 # ============================================================
 # INSTALLED APPS
@@ -90,6 +89,8 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
 
     "django.middleware.security.SecurityMiddleware",
+
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 
     "django.contrib.sessions.middleware.SessionMiddleware",
 
@@ -154,18 +155,14 @@ ASGI_APPLICATION = "config.asgi.application"
 # DATABASE
 # ============================================================
 
+import dj_database_url
+
 DATABASES = {
-
-    "default": {
-
-        "ENGINE":
-            "django.db.backends.sqlite3",
-
-        "NAME":
-            BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+    )
 }
-
 
 # ============================================================
 # PASSWORD VALIDATION
@@ -194,8 +191,8 @@ USE_TZ = True
 # STATIC FILES
 # ============================================================
 
-STATIC_URL = "static/"
-
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # ============================================================
 # DEFAULT PRIMARY KEY
@@ -212,12 +209,10 @@ DEFAULT_AUTO_FIELD = (
 
 # Your React/Vite frontend normally runs on port 5173.
 
-CORS_ALLOWED_ORIGINS = [
-
-    "http://localhost:5173",
-
-    "http://127.0.0.1:5173",
-]
+CORS_ALLOWED_ORIGINS = os.getenv(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173"
+).split(",")
 
 
 # ============================================================
@@ -288,8 +283,3 @@ FRONTEND_URL = os.getenv(
     "http://localhost:5173"
 )
 
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
-}

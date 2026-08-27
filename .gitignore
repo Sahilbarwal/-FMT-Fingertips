@@ -26,4 +26,6 @@ Thumbs.db
 
 # Large RAG data - backup separately
 backend/rag/documents/
+backend/rag/vectorstore/backend/staticfiles/
 backend/rag/vectorstore/
+backend/staticfiles/

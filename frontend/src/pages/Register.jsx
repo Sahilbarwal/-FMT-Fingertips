@@ -33,12 +33,6 @@ function Register() {
     setLoading(true);
 
     try {
-      // Split full name
-      const nameParts = fullName.trim().split(" ");
-
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ");
-
       // Generate username from email
       const username = email
         .trim()
@@ -48,11 +42,10 @@ function Register() {
       const response = await axios.post(
         "http://127.0.0.1:8000/register/",
         {
+          full_name: fullName.trim(),
           username: username,
           email: email.trim().toLowerCase(),
           password: password,
-          first_name: firstName,
-          last_name: lastName,
         }
       );
 
