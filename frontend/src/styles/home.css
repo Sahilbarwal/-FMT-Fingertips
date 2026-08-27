@@ -1,0 +1,896 @@
+/* =========================================================
+   HOME PAGE
+========================================================= */
+
+.home-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(72, 154, 150, 0.12), transparent 28%),
+    linear-gradient(135deg, #f7fafc 0%, #eef3f5 100%);
+  color: #24344a;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+
+/* =========================================================
+   NAVBAR
+========================================================= */
+
+.home-navbar {
+  height: 105px;
+  padding: 0 7%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid #e2e8f0;
+  backdrop-filter: blur(14px);
+}
+
+.home-logo {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.home-logo-icon {
+  width: 50px;
+  height: 50px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 15px;
+
+  background: #326d6a;
+  color: white;
+
+  font-size: 21px;
+
+  box-shadow: 0 8px 20px rgba(50, 109, 106, 0.18);
+}
+
+.home-logo h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #26384f;
+}
+
+.home-logo span {
+  display: block;
+  margin-top: 3px;
+
+  font-size: 13px;
+  color: #718096;
+}
+
+
+/* =========================================================
+   NAVIGATION LINKS
+========================================================= */
+
+.home-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-nav-links button {
+  border: none;
+  background: transparent;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 11px 14px;
+
+  border-radius: 12px;
+
+  color: #425466;
+  font-size: 15px;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.home-nav-links button:hover {
+  background: #edf4f4;
+  color: #326d6a;
+}
+
+.theme-toggle {
+  width: 50px;
+  height: 48px;
+
+  justify-content: center;
+
+  background: #f1f5f9 !important;
+
+  font-size: 18px !important;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   MAIN CONTENT
+========================================================= */
+
+.home-content {
+  width: min(1180px, 90%);
+  margin: 0 auto;
+
+  padding: 55px 0 50px;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.home-hero {
+  max-width: 900px;
+  margin: 0 auto;
+
+  text-align: center;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 9px 17px;
+
+  border-radius: 999px;
+
+  background: rgba(224, 239, 238, 0.9);
+  color: #356b69;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  letter-spacing: 0.3px;
+}
+
+.home-hero h1 {
+  margin: 28px 0 20px;
+
+  font-size: clamp(42px, 5vw, 70px);
+  line-height: 1.08;
+
+  font-weight: 750;
+  letter-spacing: -2px;
+
+  color: #24344a;
+}
+
+.home-hero h1 span {
+  color: #356f6d;
+}
+
+.home-hero p {
+  max-width: 720px;
+  margin: 0 auto;
+
+  color: #64748b;
+
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   LEARNING LEVEL
+========================================================= */
+
+.learning-level-section {
+  margin-top: 65px;
+}
+
+.learning-level-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  margin-bottom: 22px;
+}
+
+.learning-level-heading h3 {
+  margin: 0;
+
+  font-size: 25px;
+  font-weight: 700;
+
+  color: #26384f;
+}
+
+.learning-level-heading p {
+  margin: 8px 0 0;
+
+  color: #718096;
+  font-size: 15px;
+}
+
+.selected-level-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 11px 17px;
+
+  border-radius: 999px;
+
+  background: #e8f1f1;
+  color: #426c6a;
+
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.selected-level-label span {
+  width: 8px;
+  height: 8px;
+
+  border-radius: 50%;
+
+  background: #4f8986;
+}
+
+
+/* =========================================================
+   LEVEL CARDS
+========================================================= */
+
+.level-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.level-card {
+  position: relative;
+
+  min-height: 310px;
+
+  padding: 30px;
+
+  text-align: left;
+
+  border: 1px solid #d9e1e8;
+  border-radius: 24px;
+
+  background: rgba(255, 255, 255, 0.76);
+
+  color: inherit;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease;
+}
+
+.level-card:hover {
+  transform: translateY(-4px);
+
+  border-color: #9bbdbb;
+
+  box-shadow:
+    0 18px 40px rgba(45, 74, 91, 0.09);
+}
+
+.level-card.selected {
+  border: 2px solid #4d8582;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(238, 249, 248, 0.95),
+      rgba(255, 255, 255, 0.9)
+    );
+
+  box-shadow:
+    0 15px 35px rgba(51, 109, 106, 0.1);
+}
+
+.level-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 20px;
+}
+
+.level-icon {
+  width: 60px;
+  height: 60px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 18px;
+
+  font-size: 24px;
+}
+
+.ug-icon {
+  background: #e7f1f0;
+  color: #397572;
+}
+
+.pg-icon {
+  background: #edf0f8;
+  color: #52678e;
+}
+
+.level-check {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #4b827f;
+  color: white;
+
+  font-size: 14px;
+}
+
+.level-small-title {
+  margin-bottom: 8px;
+
+  color: #718096;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  letter-spacing: 2px;
+}
+
+.level-card h2 {
+  margin: 0 0 12px;
+
+  font-size: 31px;
+
+  color: #26384f;
+}
+
+.level-card p {
+  max-width: 470px;
+
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.level-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+
+  margin-top: 20px;
+}
+
+.level-tags span {
+  padding: 8px 11px;
+
+  border-radius: 10px;
+
+  background: #edf4f4;
+  color: #456b69;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.level-arrow {
+  position: absolute;
+
+  right: 25px;
+  bottom: 25px;
+
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #edf2f7;
+  color: #607086;
+
+  transition: all 0.2s ease;
+}
+
+.level-card:hover .level-arrow,
+.level-card.selected .level-arrow {
+  background: #4c8582;
+  color: white;
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.home-search {
+  width: min(950px, 100%);
+
+  margin: 30px auto 0;
+
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  padding: 10px 10px 10px 24px;
+
+  border: 1px solid #d7e0e5;
+  border-radius: 22px;
+
+  background: rgba(255, 255, 255, 0.9);
+
+  box-shadow:
+    0 10px 30px rgba(39, 65, 82, 0.06);
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.home-search:focus-within {
+  border-color: #5e9794;
+
+  box-shadow:
+    0 10px 35px rgba(62, 117, 114, 0.12);
+}
+
+.search-icon {
+  color: #7b8ca0;
+  font-size: 20px;
+}
+
+.home-search input {
+  flex: 1;
+
+  min-width: 0;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  color: #26384f;
+
+  font-size: 17px;
+}
+
+.home-search input::placeholder {
+  color: #94a3b8;
+}
+
+.home-search button {
+  width: 58px;
+  height: 58px;
+
+  flex-shrink: 0;
+
+  border: none;
+  border-radius: 17px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #407a77;
+  color: white;
+
+  font-size: 21px;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.home-search button:hover {
+  background: #326b68;
+  transform: translateX(2px);
+}
+
+
+/* =========================================================
+   ANSWER MODE
+========================================================= */
+
+.answer-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  margin-top: 17px;
+
+  color: #718096;
+
+  font-size: 14px;
+}
+
+.answer-mode svg {
+  color: #4d8582;
+}
+
+.answer-mode strong {
+  color: #356f6d;
+}
+
+
+/* =========================================================
+   SUGGESTIONS
+========================================================= */
+
+.suggestions-section {
+  margin-top: 70px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  margin-bottom: 22px;
+}
+
+.section-heading h3 {
+  margin: 0;
+
+  font-size: 25px;
+
+  color: #26384f;
+}
+
+.section-heading span {
+  color: #718096;
+  font-size: 14px;
+}
+
+.suggestion-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.suggestion-card {
+  width: 100%;
+
+  padding: 20px;
+
+  border: 1px solid #dce4ea;
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.76);
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.suggestion-card:hover {
+  transform: translateY(-3px);
+
+  border-color: #9bbdbb;
+
+  box-shadow:
+    0 12px 30px rgba(45, 74, 91, 0.08);
+}
+
+.suggestion-icon {
+  width: 50px;
+  height: 50px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 15px;
+
+  background: #e8f2f1;
+  color: #397572;
+
+  font-size: 20px;
+}
+
+.suggestion-text {
+  flex: 1;
+}
+
+.suggestion-text h4 {
+  margin: 0 0 5px;
+
+  color: #26384f;
+
+  font-size: 16px;
+}
+
+.suggestion-text p {
+  margin: 0;
+
+  color: #718096;
+
+  font-size: 13px;
+}
+
+.suggestion-arrow {
+  color: #7d8da0;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.home-footer {
+  margin-top: 65px;
+
+  padding: 25px 0 5px;
+
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+
+  color: #7a8899;
+
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   DARK MODE
+========================================================= */
+
+.home-page.dark {
+  background:
+    radial-gradient(
+      circle at 10% 10%,
+      rgba(58, 119, 116, 0.16),
+      transparent 30%
+    ),
+    #0f172a;
+
+  color: #e2e8f0;
+}
+
+.home-page.dark .home-navbar {
+  background: rgba(15, 23, 42, 0.88);
+  border-color: #243244;
+}
+
+.home-page.dark .home-logo h2,
+.home-page.dark .home-hero h1,
+.home-page.dark .learning-level-heading h3,
+.home-page.dark .level-card h2,
+.home-page.dark .section-heading h3,
+.home-page.dark .suggestion-text h4 {
+  color: #f1f5f9;
+}
+
+.home-page.dark .home-logo span,
+.home-page.dark .home-hero p,
+.home-page.dark .learning-level-heading p,
+.home-page.dark .level-card p,
+.home-page.dark .suggestion-text p,
+.home-page.dark .section-heading span,
+.home-page.dark .home-footer {
+  color: #94a3b8;
+}
+
+.home-page.dark .home-nav-links button {
+  color: #cbd5e1;
+}
+
+.home-page.dark .home-nav-links button:hover {
+  background: #1e293b;
+  color: #7dd3cf;
+}
+
+.home-page.dark .theme-toggle {
+  background: #1e293b !important;
+}
+
+.home-page.dark .hero-badge {
+  background: #173b3a;
+  color: #8ad2ce;
+}
+
+.home-page.dark .selected-level-label {
+  background: #1e293b;
+  color: #cbd5e1;
+}
+
+.home-page.dark .level-card,
+.home-page.dark .suggestion-card {
+  background: #172235;
+  border-color: #2b3a4e;
+}
+
+.home-page.dark .level-card:hover,
+.home-page.dark .suggestion-card:hover {
+  border-color: #4d8582;
+}
+
+.home-page.dark .level-card.selected {
+  background:
+    linear-gradient(
+      135deg,
+      #173b3a,
+      #162538
+    );
+
+  border-color: #5b9d99;
+}
+
+.home-page.dark .level-small-title {
+  color: #94a3b8;
+}
+
+.home-page.dark .level-tags span {
+  background: #26384a;
+  color: #cbd5e1;
+}
+
+.home-page.dark .level-arrow {
+  background: #26384a;
+  color: #cbd5e1;
+}
+
+.home-page.dark .home-search {
+  background: #172235;
+  border-color: #2b3a4e;
+}
+
+.home-page.dark .home-search:focus-within {
+  border-color: #5b9d99;
+}
+
+.home-page.dark .home-search input {
+  color: #f1f5f9;
+}
+
+.home-page.dark .home-search input::placeholder {
+  color: #718096;
+}
+
+.home-page.dark .answer-mode {
+  color: #94a3b8;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+  .home-navbar {
+    padding: 0 5%;
+  }
+
+  .home-content {
+    width: min(92%, 1180px);
+  }
+
+  .home-hero h1 {
+    font-size: 52px;
+  }
+}
+
+
+@media (max-width: 700px) {
+  .home-navbar {
+    height: auto;
+
+    padding: 18px 5%;
+
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .home-nav-links {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .home-nav-links button span {
+    display: none;
+  }
+
+  .home-content {
+    padding-top: 40px;
+  }
+
+  .home-hero h1 {
+    font-size: 42px;
+    letter-spacing: -1px;
+  }
+
+  .home-hero p {
+    font-size: 16px;
+  }
+
+  .learning-level-heading,
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .level-cards,
+  .suggestion-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .level-card {
+    min-height: 280px;
+  }
+
+  .home-search {
+    border-radius: 18px;
+  }
+
+  .home-search button {
+    width: 52px;
+    height: 52px;
+  }
+
+  .home-footer {
+    flex-wrap: wrap;
+    text-align: center;
+  }
+}
+
+
+@media (max-width: 450px) {
+  .home-logo h2 {
+    font-size: 19px;
+  }
+
+  .home-hero h1 {
+    font-size: 35px;
+  }
+
+  .level-card {
+    padding: 23px;
+  }
+
+  .home-search {
+    padding-left: 16px;
+  }
+}

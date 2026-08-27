@@ -1,0 +1,364 @@
+/* =========================================
+   LEARNING LEVEL
+========================================= */
+
+.level-section {
+  width: 100%;
+  max-width: 1100px;
+  margin: 42px auto 28px;
+}
+
+.level-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.level-heading h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #162b4d;
+}
+
+.level-heading p {
+  margin: 6px 0 0;
+  color: #7183a0;
+  font-size: 14px;
+}
+
+.level-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: #e8f6f3;
+  color: #247b75;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2f8f89;
+}
+
+
+/* =========================================
+   LEVEL CARDS
+========================================= */
+
+.level-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.level-card {
+  position: relative;
+
+  min-height: 235px;
+  padding: 25px;
+
+  text-align: left;
+
+  border: 1.5px solid #e2e9f2;
+  border-radius: 20px;
+
+  background: rgba(255, 255, 255, 0.92);
+
+  cursor: pointer;
+
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+
+  overflow: hidden;
+}
+
+.level-card:hover {
+  transform: translateY(-4px);
+  border-color: #70bcb5;
+  box-shadow: 0 12px 30px rgba(38, 105, 101, 0.12);
+}
+
+.level-card.active {
+  border: 2px solid #2f817a;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f2fbf9 0%,
+      #ffffff 70%
+    );
+
+  box-shadow:
+    0 12px 32px rgba(47, 129, 122, 0.16);
+}
+
+.level-card.active::after {
+  content: "";
+
+  position: absolute;
+
+  width: 150px;
+  height: 150px;
+
+  right: -60px;
+  bottom: -70px;
+
+  border-radius: 50%;
+
+  background: rgba(47, 129, 122, 0.06);
+
+  pointer-events: none;
+}
+
+
+/* =========================================
+   CARD TOP
+========================================= */
+
+.level-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+/* Icon */
+
+.level-icon {
+  width: 50px;
+  height: 50px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background: #e9f6f4;
+
+  color: #2d817a;
+
+  font-size: 21px;
+}
+
+.pg-icon {
+  background: #edf1fb;
+  color: #536fa8;
+}
+
+
+/* Check */
+
+.level-check {
+  width: 28px;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #2f817a;
+  color: white;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+
+/* =========================================
+   CARD TEXT
+========================================= */
+
+.level-text {
+  margin-top: 22px;
+}
+
+.level-label {
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  font-weight: 700;
+  color: #8a9ab3;
+}
+
+.level-text h4 {
+  margin: 4px 0 7px;
+
+  font-size: 30px;
+  line-height: 1;
+
+  font-weight: 800;
+
+  color: #182d4d;
+}
+
+.level-text p {
+  max-width: 430px;
+
+  margin: 0;
+
+  font-size: 14px;
+  line-height: 1.6;
+
+  color: #7183a0;
+}
+
+
+/* =========================================
+   FEATURES
+========================================= */
+
+.level-features {
+  display: flex;
+  gap: 7px;
+  margin-top: 20px;
+}
+
+.level-features span {
+  padding: 5px 9px;
+
+  border-radius: 7px;
+
+  background: #f3f6fa;
+
+  color: #667993;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.level-card.active .level-features span {
+  background: #e5f3f1;
+  color: #317a74;
+}
+
+
+/* =========================================
+   ARROW
+========================================= */
+
+.level-arrow {
+  position: absolute;
+
+  right: 24px;
+  bottom: 24px;
+
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #f3f6fa;
+
+  color: #8291a7;
+
+  font-size: 12px;
+
+  transition: all 0.25s ease;
+}
+
+.level-card:hover .level-arrow {
+  background: #e7f4f2;
+  color: #2f817a;
+  transform: translateX(3px);
+}
+
+.level-card.active .level-arrow {
+  background: #2f817a;
+  color: white;
+}
+
+
+/* =========================================
+   SELECTED LEVEL MESSAGE
+========================================= */
+
+.selected-level-message {
+  width: fit-content;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 10px auto 0;
+
+  color: #7183a0;
+
+  font-size: 13px;
+}
+
+.selected-level-message svg {
+  color: #2f817a;
+}
+
+.selected-level-message strong {
+  color: #162b4d;
+}
+
+
+/* =========================================
+   SEARCH
+========================================= */
+
+.home-search {
+  margin-top: 25px;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+
+  .level-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .level-options {
+    grid-template-columns: 1fr;
+  }
+
+  .level-card {
+    min-height: 220px;
+  }
+
+}
+
+
+@media (max-width: 480px) {
+
+  .level-section {
+    margin-top: 30px;
+  }
+
+  .level-card {
+    padding: 20px;
+  }
+
+  .level-text h4 {
+    font-size: 26px;
+  }
+
+  .level-features {
+    flex-wrap: wrap;
+  }
+
+}

@@ -1,0 +1,471 @@
+/* =========================
+   HISTORY PAGE
+========================= */
+
+.history-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 5% 15%, #e4f6f3 0%, transparent 28%),
+    #f7faff;
+}
+
+.history-navbar {
+  height: 70px;
+  padding: 0 6%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-bottom: 1px solid #e5ebf1;
+}
+
+.history-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.history-brand-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f766e;
+  color: white;
+}
+
+.history-brand h2 {
+  color: #17324d;
+  font-size: 17px;
+}
+
+.history-brand span {
+  color: #8795a6;
+  font-size: 11px;
+}
+
+.history-profile-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #526276;
+}
+
+.history-profile-button:hover {
+  background: #edf7f5;
+  color: #0f766e;
+}
+
+.history-container {
+  width: min(900px, 92%);
+  margin: 0 auto;
+  padding: 28px 0 50px;
+}
+
+.history-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  color: #708096;
+  font-size: 13px;
+}
+
+.history-back:hover {
+  color: #0f766e;
+}
+
+.history-heading {
+  margin: 35px 0 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.history-heading h1 {
+  color: #17324d;
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+
+.history-heading p {
+  color: #8795a6;
+  font-size: 14px;
+}
+
+.new-chat-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #0f766e;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.new-chat-button:hover {
+  background: #0b625c;
+}
+
+.history-card {
+  padding: 20px;
+  background: white;
+  border: 1px solid #e1e8ef;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(35, 65, 90, 0.05);
+}
+
+.history-search {
+  height: 48px;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #dfe7ef;
+  border-radius: 11px;
+  margin-bottom: 12px;
+}
+
+.history-search svg {
+  color: #91a0b2;
+  flex-shrink: 0;
+}
+
+.history-search input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  color: #26394d;
+  background: transparent;
+}
+
+.history-search input::placeholder {
+  color: #a0acba;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.history-item {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #edf1f5;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-question {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 5px;
+  text-align: left;
+  border: none;
+  background: transparent;
+}
+
+.history-question:hover .history-question-text h3 {
+  color: #0f766e;
+}
+
+.history-question-icon {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #eaf6f4;
+  color: #0f766e;
+}
+
+.history-question-text {
+  min-width: 0;
+}
+
+.history-question-text h3 {
+  color: #34465a;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-question-text span {
+  color: #9aa6b5;
+  font-size: 11px;
+}
+
+.delete-history-button {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #a3afbd;
+}
+
+.delete-history-button:hover {
+  background: #fff0f0;
+  color: #d64545;
+}
+
+.history-note {
+  text-align: center;
+  margin-top: 18px;
+  color: #9aa6b5;
+  font-size: 11px;
+}
+
+@media (max-width: 600px) {
+  .history-navbar {
+    padding: 0 4%;
+  }
+
+  .history-brand span {
+    display: none;
+  }
+
+  .history-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .new-chat-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .history-card {
+    padding: 12px;
+  }
+
+  .history-question-text h3 {
+    white-space: normal;
+  }
+}
+
+
+/* =========================
+   EMPTY / LOADING STATE
+   (was referenced by History.jsx but never defined)
+========================= */
+
+.history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+  padding: 52px 20px;
+  color: #8795a6;
+}
+
+.history-empty svg {
+  width: 32px;
+  height: 32px;
+  color: #b7c2cf;
+  margin-bottom: 6px;
+}
+
+.history-empty h3 {
+  color: #34465a;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.history-empty p {
+  font-size: 13px;
+  color: #8795a6;
+}
+
+
+/* =========================
+   CLEAR HISTORY BUTTON
+   (was referenced by History.jsx but never defined)
+========================= */
+
+.clear-history-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 11px 16px;
+  border: 1px solid #f1c9c9;
+  border-radius: 10px;
+  background: #fff6f6;
+  color: #d64545;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.clear-history-button:hover {
+  background: #ffeaea;
+  border-color: #eab3b3;
+}
+
+
+/* =========================
+   EMBEDDED HISTORY
+   (History view rendered inside Chat.jsx's main panel —
+   reuses the classes above but drops the standalone-page
+   sizing/centering that .history-container was built for)
+========================= */
+
+.history-embedded {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 28px 32px 40px;
+}
+
+.history-embedded .history-heading {
+  margin: 0 0 20px;
+}
+
+.history-embedded .history-heading h1 {
+  font-size: 21px;
+  margin-bottom: 4px;
+}
+
+.history-embedded .history-heading p {
+  font-size: 13px;
+}
+
+.history-embedded .history-card {
+  margin-bottom: 14px;
+  border-radius: 14px;
+}
+
+.history-embedded .history-note {
+  margin-top: 14px;
+}
+
+@media (max-width: 700px) {
+  .history-embedded {
+    padding: 18px 16px 30px;
+  }
+
+  .history-embedded .history-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .history-embedded .new-chat-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+
+/* =========================
+   DARK MODE
+   (chat.css toggles a .dark class on the app root — history.css
+   had no coverage for it at all, so this view would render as a
+   bright white card inside a dark app)
+========================= */
+
+.dark .history-heading h1 {
+  color: #e4ecf5;
+}
+
+.dark .history-heading p,
+.dark .history-note {
+  color: #8ea0b5;
+}
+
+.dark .history-card {
+  background: #182433;
+  border-color: #2a3a4c;
+  box-shadow: none;
+}
+
+.dark .history-search {
+  border-color: #2a3a4c;
+  background: #141f2c;
+}
+
+.dark .history-search input {
+  color: #d7e0ea;
+}
+
+.dark .history-search input::placeholder {
+  color: #6e8195;
+}
+
+.dark .history-item {
+  border-color: #263545;
+}
+
+.dark .history-question-icon {
+  background: #1d302f;
+  color: #5fcfc3;
+}
+
+.dark .history-question-text h3 {
+  color: #d7e0ea;
+}
+
+.dark .history-question:hover .history-question-text h3 {
+  color: #5fcfc3;
+}
+
+.dark .history-question-text span {
+  color: #7f93a8;
+}
+
+.dark .history-empty {
+  color: #8ea0b5;
+}
+
+.dark .history-empty svg {
+  color: #4c5f74;
+}
+
+.dark .history-empty h3 {
+  color: #d7e0ea;
+}
+
+.dark .clear-history-button {
+  background: #2a1c1c;
+  border-color: #4a2c2c;
+  color: #e88a8a;
+}
+
+.dark .clear-history-button:hover {
+  background: #331f1f;
+  border-color: #5a3535;
+}

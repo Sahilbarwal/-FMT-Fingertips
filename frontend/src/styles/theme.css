@@ -1,0 +1,291 @@
+
+/* =========================================
+   DARK MODE COLORS
+========================================= */
+
+body.dark-mode {
+    background: #111827;
+    color: #e5e7eb;
+}
+
+body.dark-mode .chat-page {
+    background:
+        radial-gradient(
+            circle at top left,
+            #1f2937 0%,
+            transparent 40%
+        ),
+        radial-gradient(
+            circle at bottom right,
+            #172554 0%,
+            transparent 40%
+        ),
+        #111827;
+}
+
+body.dark-mode .chat-navbar {
+    background: rgba(17, 24, 39, 0.95);
+    border-color: #374151;
+}
+
+body.dark-mode .chat-navbar,
+body.dark-mode .chat-navbar * {
+    color: #e5e7eb;
+}
+
+
+/* Main text */
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode p,
+body.dark-mode span,
+body.dark-mode li {
+    color: #e5e7eb;
+}
+
+
+/* Assistant message */
+
+body.dark-mode .assistant-message,
+body.dark-mode .answer,
+body.dark-mode .message-content {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+
+/* Chat cards */
+
+body.dark-mode .chat-card,
+body.dark-mode .answer-card,
+body.dark-mode .sources {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+
+/* Input area */
+
+body.dark-mode .chat-input,
+body.dark-mode input,
+body.dark-mode textarea {
+    background: #1f2937;
+    color: #f9fafb;
+    border-color: #4b5563;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+    color: #9ca3af;
+}
+
+
+/* Level selector */
+
+body.dark-mode .level-selector {
+    background: #1f2937;
+}
+
+body.dark-mode .level-selector button {
+    color: #e5e7eb;
+}
+
+
+/* Suggested questions */
+
+body.dark-mode .suggestion-chip,
+body.dark-mode .suggestion-button {
+    background: #1f2937;
+    color: #e5e7eb;
+    border-color: #4b5563;
+}
+
+
+/* Sources */
+
+body.dark-mode .source-card {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+
+/* Theme button */
+
+body.dark-mode .theme-toggle {
+    background: #374151;
+    color: #facc15;
+}
+
+body:not(.dark-mode) .theme-toggle {
+    background: #eef2f7;
+    color: #374151;
+}
+
+/* =========================
+   DARK MODE
+========================= */
+
+body.dark-mode {
+  background: #111827;
+  color: #f8fafc;
+}
+
+body.dark-mode #root {
+  background: #111827;
+  color: #f8fafc;
+}
+
+/* Navbar */
+body.dark-mode .navbar,
+body.dark-mode .home-navbar {
+  background: #18212f;
+  border-color: #334155;
+}
+
+/* Main pages */
+body.dark-mode .home,
+body.dark-mode .chat-page,
+body.dark-mode .history-page,
+body.dark-mode .profile-page {
+  background: #111827;
+  color: #f8fafc;
+}
+
+/* Home background */
+body.dark-mode .home-page {
+  background:
+    radial-gradient(circle at top left, rgba(38, 94, 90, 0.25), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(35, 55, 90, 0.25), transparent 35%),
+    #111827;
+}
+
+/* Text */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode p,
+body.dark-mode span {
+  color: inherit;
+}
+
+/* Cards */
+body.dark-mode .level-card,
+body.dark-mode .learning-card,
+body.dark-mode .chat-card,
+body.dark-mode .answer-card,
+body.dark-mode .auth-card {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+/* Inputs */
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: #475569;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* Buttons */
+body.dark-mode button:not(.theme-toggle) {
+  color: inherit;
+}
+
+/* Search/input container */
+body.dark-mode .home-question-box,
+body.dark-mode .input-area {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+/* Theme button */
+.theme-toggle {
+  cursor: pointer;
+}
+
+/* =========================
+   DARK MODE - HOME
+========================= */
+
+.home-page.dark {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.home-page.dark .home-navbar {
+  background: #111827;
+  border-color: #334155;
+}
+
+.home-page.dark .home-logo h2,
+.home-page.dark .home-hero h1,
+.home-page.dark .learning-level-heading h3,
+.home-page.dark .level-card h2,
+.home-page.dark .section-heading h3 {
+  color: #f8fafc;
+}
+
+.home-page.dark .home-logo span,
+.home-page.dark .home-hero p,
+.home-page.dark .learning-level-heading p,
+.home-page.dark .level-card p,
+.home-page.dark .suggestion-card p,
+.home-page.dark .section-heading span,
+.home-page.dark .home-footer {
+  color: #94a3b8;
+}
+
+.home-page.dark .level-card,
+.home-page.dark .suggestion-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.home-page.dark .level-card.selected {
+  border-color: #5eead4;
+  background: #173b3a;
+}
+
+.home-page.dark .home-search {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.home-page.dark .home-search input {
+  background: transparent;
+  color: #f8fafc;
+}
+
+.home-page.dark .home-search input::placeholder {
+  color: #94a3b8;
+}
+
+.home-page.dark .level-tags span {
+  background: #334155;
+  color: #cbd5e1;
+}
+
+.home-page.dark .theme-toggle,
+.home-page.dark .home-nav-links button {
+  color: #e2e8f0;
+}
+
+.home-page.dark .selected-level-label {
+  background: #1e293b;
+  color: #cbd5e1;
+}
+
+.home-page.dark .answer-mode {
+  color: #cbd5e1;
+}

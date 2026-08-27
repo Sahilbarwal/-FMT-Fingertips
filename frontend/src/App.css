@@ -1,0 +1,20 @@
+/* =========================================================
+   APP-WIDE STYLES ONLY
+   ========================================================= */
+
+/* Root application container */
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Main app wrapper */
+.app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Prevent accidental horizontal scrolling */
+body {
+  overflow-x: hidden;
+}
