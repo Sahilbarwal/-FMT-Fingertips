@@ -38,7 +38,7 @@ client = chromadb.PersistentClient(
     path=str(VECTORSTORE_DIR)
 )
 
-collection = client.get_collection(
+collection = client.get_or_create_collection(
     name=COLLECTION_NAME
 )
 
