@@ -23,3 +23,7 @@ Thumbs.db
 
 # Python database (optional - decide if you need it)
 *.sqlite3
+
+# Large RAG data - backup separately
+backend/rag/documents/
+backend/rag/vectorstore/
