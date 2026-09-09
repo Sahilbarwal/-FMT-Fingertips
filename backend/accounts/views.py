@@ -1,4 +1,8 @@
+import logging
+
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
+
 from rest_framework import status
 from rest_framework.decorators import (
     api_view,
@@ -15,6 +19,13 @@ from .models import SearchHistory
 from .serializers import RegisterSerializer
 
 from rag.rag_engine import generate_answer
+
+
+# ============================================================
+# LOGGING
+# ============================================================
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================
@@ -51,30 +62,41 @@ def register(request):
     Register a new user.
     """
 
-    serializer = RegisterSerializer(
-        data=request.data
-    )
-
-    if not serializer.is_valid():
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST,
+    try:
+        serializer = RegisterSerializer(
+            data=request.data
         )
 
-    user = serializer.save()
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-    return Response(
-        {
-            "message": "Registration successful.",
-            **token_response(user),
-        },
-        status=status.HTTP_201_CREATED,
-    )
+        user = serializer.save()
 
+        return Response(
+            {
+                "message": "Registration successful.",
+                **token_response(user),
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
-# ============================================================
-# LOGIN
-# ============================================================
+    except Exception as error:
+        logger.exception("REGISTER ERROR")
+
+        print("\n========== REGISTER ERROR ==========")
+        print(error)
+        print("====================================\n")
+
+        return Response(
+            {
+                "error": "Registration failed due to a server error."
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
 
 # ============================================================
 # LOGIN
@@ -87,61 +109,84 @@ def login(request):
     Login using email and password.
     """
 
-    email = request.data.get(
-        "email",
-        ""
-    ).strip().lower()
-
-    password = request.data.get(
-        "password",
-        ""
-    )
-
-    if not email or not password:
-        return Response(
-            {
-                "error": "Email and password are required."
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    # Find user using their email
-    from django.contrib.auth.models import User
-
     try:
-        user_object = User.objects.get(
-            email__iexact=email
+        email = request.data.get(
+            "email",
+            ""
+        ).strip().lower()
+
+        password = request.data.get(
+            "password",
+            ""
         )
 
-    except User.DoesNotExist:
+        if not email or not password:
+            return Response(
+                {
+                    "error": "Email and password are required."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # ----------------------------------------------------
+        # Find user using their email
+        # ----------------------------------------------------
+
+        try:
+            user_object = User.objects.get(
+                email__iexact=email
+            )
+
+        except User.DoesNotExist:
+            return Response(
+                {
+                    "error": "Invalid email or password."
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        # ----------------------------------------------------
+        # Authenticate with actual username
+        # ----------------------------------------------------
+
+        user = authenticate(
+            username=user_object.username,
+            password=password,
+        )
+
+        if user is None:
+            return Response(
+                {
+                    "error": "Invalid email or password."
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        # ----------------------------------------------------
+        # Generate JWT response
+        # ----------------------------------------------------
+
         return Response(
             {
-                "error": "Invalid email or password."
+                "message": "Login successful.",
+                **token_response(user),
             },
-            status=status.HTTP_401_UNAUTHORIZED,
+            status=status.HTTP_200_OK,
         )
 
-    # Authenticate with actual username
-    user = authenticate(
-        username=user_object.username,
-        password=password,
-    )
+    except Exception as error:
+        logger.exception("LOGIN ERROR")
 
-    if user is None:
+        print("\n========== LOGIN ERROR ==========")
+        print(error)
+        print("=================================\n")
+
         return Response(
             {
-                "error": "Invalid email or password."
+                "error": "Login failed due to a server error."
             },
-            status=status.HTTP_401_UNAUTHORIZED,
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-
-    return Response(
-        {
-            "message": "Login successful.",
-            **token_response(user),
-        },
-        status=status.HTTP_200_OK,
-    )
 
 
 # ============================================================
@@ -160,8 +205,7 @@ def logout(request):
 
     return Response(
         {
-            "message":
-            "Logout successful."
+            "message": "Logout successful."
         },
         status=status.HTTP_200_OK,
     )
@@ -258,8 +302,7 @@ def history(request):
         if not question or not answer:
             return Response(
                 {
-                    "error":
-                    "Question and answer are required."
+                    "error": "Question and answer are required."
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -272,14 +315,10 @@ def history(request):
 
         return Response(
             {
-                "message":
-                "History saved successfully.",
-                "id":
-                record.id,
-                "question":
-                record.question,
-                "answer":
-                record.answer,
+                "message": "History saved successfully.",
+                "id": record.id,
+                "question": record.question,
+                "answer": record.answer,
             },
             status=status.HTTP_201_CREATED,
         )
@@ -296,8 +335,7 @@ def history(request):
 
         return Response(
             {
-                "message":
-                "History cleared successfully."
+                "message": "History cleared successfully."
             },
             status=status.HTTP_200_OK,
         )
@@ -367,8 +405,7 @@ def ask(request):
 
         return Response(
             {
-                "error":
-                "Question is required."
+                "error": "Question is required."
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
@@ -393,20 +430,15 @@ def ask(request):
 
     except Exception as error:
 
-        print(
-            "\n========== ASK ERROR =========="
-        )
-
+        print("\n========== ASK ERROR ==========")
         print(error)
+        print("================================\n")
 
-        print(
-            "==============================\n"
-        )
+        logger.exception("ASK ERROR")
 
         return Response(
             {
-                "error":
-                f"Failed to generate answer: {error}"
+                "error": f"Failed to generate answer: {error}"
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
@@ -417,37 +449,29 @@ def ask(request):
 
     if result.get("error"):
 
-        print(
-            "\n========== AI ERROR =========="
-        )
+        print("\n========== AI ERROR ==========")
 
         print(
             result.get("error")
         )
 
-        print(
-            "==============================\n"
-        )
+        print("==============================\n")
 
         return Response(
             {
-                "error":
-                result.get("error"),
+                "error": result.get("error"),
 
-                "answer":
-                result.get(
+                "answer": result.get(
                     "answer",
                     ""
                 ),
 
-                "sources":
-                result.get(
+                "sources": result.get(
                     "sources",
                     []
                 ),
 
-                "timing":
-                result.get(
+                "timing": result.get(
                     "timing"
                 ),
             },
@@ -473,8 +497,7 @@ def ask(request):
 
         return Response(
             {
-                "error":
-                "The AI returned an empty answer."
+                "error": "The AI returned an empty answer."
             },
             status=status.HTTP_502_BAD_GATEWAY,
         )
@@ -501,37 +524,32 @@ def ask(request):
             error
         )
 
+        logger.exception("HISTORY SAVE ERROR")
+
     # --------------------------------------------------------
     # RESPONSE
     # --------------------------------------------------------
 
     return Response(
         {
-            "question":
-            question,
+            "question": question,
 
-            "level":
-            level,
+            "level": level,
 
-            "answer":
-            answer,
+            "answer": answer,
 
-            "sources":
-            result.get(
+            "sources": result.get(
                 "sources",
                 []
             ),
 
-            "model":
-            result.get(
+            "model": result.get(
                 "model"
             ),
 
-            "source":
-            "local_rag_openai",
+            "source": "local_rag_openai",
 
-            "timing":
-            result.get(
+            "timing": result.get(
                 "timing"
             ),
         },
