@@ -1,4 +1,4 @@
-import ReactMarkdown from "react-markdown";
+
 import remarkGfm from "remark-gfm";
 import { useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
@@ -33,7 +33,7 @@ import "../styles/chat.css";
 import "../styles/history.css";
 import "../styles/profile.css";
 
-const API_URL = "http://127.0.0.1:8000/ask/";
+const API_URL = "https://fmt-fingertips-backend.onrender.com/ask/stream/";
 const CHAT_STORAGE_KEY = "fmt_recent_chats";
 
 export default function Chat() {
@@ -175,7 +175,7 @@ export default function Chat() {
     setHistoryLoading(true);
 
     axios
-      .get("http://127.0.0.1:8000/history/", {
+      .get("https://fmt-fingertips-backend.onrender.com/history/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -213,7 +213,7 @@ export default function Chat() {
     setProfileLoading(true);
 
     axios
-      .get("http://127.0.0.1:8000/me/", {
+      .get("https://fmt-fingertips-backend.onrender.com/me/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -302,7 +302,7 @@ export default function Chat() {
     if (!confirmed) return;
 
     try {
-      await axios.delete("http://127.0.0.1:8000/history/", {
+      await axios.delete("https://fmt-fingertips-backend.onrender.com/history/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -416,7 +416,7 @@ export default function Chat() {
   };
 
   // =========================================================
-  // SEND QUESTION
+  // SEND QUESTION - STREAMING
   // =========================================================
 
   const sendQuestion = async (
@@ -447,13 +447,8 @@ export default function Chat() {
     ];
 
     setMessages(messagesWithUser);
-
     setQuestion("");
     setLoading(true);
-
-    // -------------------------------------------------------
-    // CREATE NEW CHAT IF NO ACTIVE CHAT
-    // -------------------------------------------------------
 
     let currentChatId = activeChatId;
 
@@ -465,7 +460,6 @@ export default function Chat() {
       );
 
       currentChatId = newChat.id;
-
       setActiveChatId(newChat.id);
     } else {
       updateChat(
@@ -475,9 +469,7 @@ export default function Chat() {
     }
 
     try {
-      // Your token is stored as "access"
-      const token =
-        localStorage.getItem("access");
+      const token = localStorage.getItem("access");
 
       if (!token) {
         throw new Error(
@@ -489,15 +481,10 @@ export default function Chat() {
         API_URL,
         {
           method: "POST",
-
           headers: {
-            "Content-Type":
-              "application/json",
-
-            Authorization:
-              `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-
           body: JSON.stringify({
             question: trimmedQuestion,
             level: effectiveLevel,
@@ -505,28 +492,19 @@ export default function Chat() {
         }
       );
 
-      // -----------------------------------------------------
-      // HANDLE UNAUTHORIZED
-      // -----------------------------------------------------
-
       if (response.status === 401) {
-        throw new Error(
-          "Your session is unauthorized or expired. Please log in again."
-        );
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+        window.location.href = "/login";
+        return;
       }
-
-      // -----------------------------------------------------
-      // HANDLE OTHER ERRORS
-      // -----------------------------------------------------
 
       if (!response.ok) {
         let errorMessage =
           "Unable to get answer from server.";
 
         try {
-          const errorData =
-            await response.json();
-
+          const errorData = await response.json();
           errorMessage =
             errorData.detail ||
             errorData.error ||
@@ -539,57 +517,163 @@ export default function Chat() {
         throw new Error(errorMessage);
       }
 
-      const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
+      if (!response.body) {
+        throw new Error(
+          "Streaming is not supported by this browser."
+        );
       }
 
-      const assistantMessage = {
-        id: Date.now() + 1,
+      const assistantId = Date.now() + 1;
+      let fullAnswer = "";
+      let sources = [];
+
+      const initialAssistantMessage = {
+        id: assistantId,
         role: "assistant",
-
-        content:
-          data.answer ||
-          data.response ||
-          data.message ||
-          "No answer was returned.",
-
-        sources:
-          data.sources || [],
-
-        time:
-          new Date().toISOString(),
+        content: "",
+        sources: [],
+        time: new Date().toISOString(),
       };
+
+      setMessages([
+        ...messagesWithUser,
+        initialAssistantMessage,
+      ]);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+      let streamCompleted = false;
+
+      const handleEvent = (event) => {
+        if (!event || !event.type) return;
+
+        if (event.type === "meta") {
+          sources = event.sources || [];
+
+          setMessages((previousMessages) =>
+            previousMessages.map((message) =>
+              message.id === assistantId
+                ? { ...message, sources }
+                : message
+            )
+          );
+        }
+
+        else if (event.type === "delta") {
+          const delta = event.text || "";
+          if (!delta) return;
+
+          fullAnswer += delta;
+
+          setMessages((previousMessages) =>
+            previousMessages.map((message) =>
+              message.id === assistantId
+                ? {
+                    ...message,
+                    content: fullAnswer,
+                    sources,
+                  }
+                : message
+            )
+          );
+        }
+
+        else if (event.type === "done") {
+          fullAnswer = event.answer || fullAnswer;
+          sources = event.sources || sources;
+          streamCompleted = true;
+
+          setMessages((previousMessages) =>
+            previousMessages.map((message) =>
+              message.id === assistantId
+                ? {
+                    ...message,
+                    content: fullAnswer || "No answer was returned.",
+                    sources,
+                  }
+                : message
+            )
+          );
+        }
+
+        else if (event.type === "error") {
+          throw new Error(
+            event.error ||
+              "Something went wrong while generating the answer."
+          );
+        }
+      };
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (!trimmedLine) continue;
+
+          try {
+            handleEvent(JSON.parse(trimmedLine));
+          } catch (parseError) {
+            if (parseError instanceof Error && parseError.message.includes("AI generation")) {
+              throw parseError;
+            }
+            console.warn("Could not parse stream event:", trimmedLine, parseError);
+          }
+        }
+      }
+
+      buffer += decoder.decode();
+
+      if (buffer.trim()) {
+        const finalLines = buffer
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean);
+
+        for (const line of finalLines) {
+          try {
+            handleEvent(JSON.parse(line));
+          } catch (parseError) {
+            console.warn("Could not parse final stream event:", line, parseError);
+          }
+        }
+      }
 
       const finalMessages = [
         ...messagesWithUser,
-        assistantMessage,
+        {
+          id: assistantId,
+          role: "assistant",
+          content: fullAnswer || "No answer was returned.",
+          sources,
+          time: new Date().toISOString(),
+        },
       ];
 
       setMessages(finalMessages);
+      updateChat(currentChatId, finalMessages);
 
-      updateChat(
-        currentChatId,
-        finalMessages
-      );
+      if (!streamCompleted) {
+        console.warn("Streaming connection ended without a done event.");
+      }
+
     } catch (error) {
-      console.error(
-        "ASK ERROR:",
-        error
-      );
+      console.error("STREAM ASK ERROR:", error);
 
       const errorMessage = {
         id: Date.now() + 2,
         role: "assistant",
         error: true,
-
         content:
-          error.message ||
+          error?.message ||
           "Something went wrong while generating the answer.",
-
-        time:
-          new Date().toISOString(),
+        time: new Date().toISOString(),
       };
 
       const finalMessages = [
@@ -598,11 +682,7 @@ export default function Chat() {
       ];
 
       setMessages(finalMessages);
-
-      updateChat(
-        currentChatId,
-        finalMessages
-      );
+      updateChat(currentChatId, finalMessages);
     } finally {
       setLoading(false);
     }

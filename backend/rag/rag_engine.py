@@ -843,3 +843,303 @@ def generate_answer(
                 ),
         },
     }
+
+# ============================================================
+# STREAM ANSWER
+# ============================================================
+
+def stream_answer(question, level="UG"):
+    """
+    Streaming version of the FMT RAG answer generator.
+
+    This function:
+    1. Retrieves relevant FMT textbook content from ChromaDB.
+    2. Builds the same textbook-grounded prompt.
+    3. Sends the prompt to OpenAI with streaming enabled.
+    4. Yields the answer progressively.
+    5. Returns sources and timing information.
+    
+    The existing generate_answer() function is NOT modified.
+    """
+
+    total_start = time.perf_counter()
+
+    # ========================================================
+    # CHECK OPENAI API KEY
+    # ========================================================
+
+    if not OPENAI_API_KEY:
+        yield {
+            "type": "error",
+            "error": "OPENAI_API_KEY is missing."
+        }
+        return
+
+    # ========================================================
+    # VALIDATE QUESTION
+    # ========================================================
+
+    question = str(question or "").strip()
+
+    if not question:
+        yield {
+            "type": "error",
+            "error": "Question cannot be empty."
+        }
+        return
+
+    # ========================================================
+    # NORMALIZE LEVEL
+    # ========================================================
+
+    level = str(level or "UG").upper().strip()
+
+    if level in ["UG", "MBBS"]:
+        level = "MBBS"
+    elif level == "PG":
+        level = "PG"
+    else:
+        level = "MBBS"
+
+    # ========================================================
+    # RETRIEVE TEXTBOOK CONTEXT
+    # ========================================================
+
+    retrieval_start = time.perf_counter()
+
+    try:
+
+        results = retrieve_context(
+            question,
+            top_k=TOP_K
+        )
+
+    except Exception as error:
+
+        print()
+        print("========== STREAM RETRIEVAL ERROR ==========")
+        print(error)
+        print("============================================")
+        print()
+
+        yield {
+            "type": "error",
+            "error": f"Knowledge-base retrieval failed: {error}"
+        }
+
+        return
+
+    retrieval_seconds = (
+        time.perf_counter()
+        - retrieval_start
+    )
+
+    # ========================================================
+    # CHECK RETRIEVAL RESULTS
+    # ========================================================
+
+    if not results:
+
+        yield {
+            "type": "error",
+            "error": (
+                "I could not find enough relevant "
+                "FMT textbook material to answer "
+                "this question."
+            )
+        }
+
+        return
+
+    # ========================================================
+    # BUILD CONTEXT
+    # ========================================================
+
+    try:
+
+        context = build_context(
+            results
+        )
+
+        prompt = build_prompt(
+            question,
+            level,
+            context
+        )
+
+        sources = format_sources(
+            results
+        )
+
+    except Exception as error:
+
+        print()
+        print("========== STREAM PROMPT ERROR ==========")
+        print(error)
+        print("=========================================")
+        print()
+
+        yield {
+            "type": "error",
+            "error": f"Failed to build answer context: {error}"
+        }
+
+        return
+
+    # ========================================================
+    # SEND METADATA FIRST
+    # ========================================================
+
+    yield {
+        "type": "meta",
+        "sources": sources,
+        "level": level,
+        "model": OPENAI_MODEL,
+        "retrieval_seconds": round(
+            retrieval_seconds,
+            3
+        )
+    }
+
+    # ========================================================
+    # CHECK OPENAI CLIENT
+    # ========================================================
+
+    if client is None:
+
+        yield {
+            "type": "error",
+            "error": "OpenAI client is not configured."
+        }
+
+        return
+
+    # ========================================================
+    # STREAM OPENAI RESPONSE
+    # ========================================================
+
+    openai_start = time.perf_counter()
+
+    full_answer = ""
+
+    try:
+
+        stream = client.responses.create(
+            model=OPENAI_MODEL,
+            input=prompt,
+            stream=True,
+        )
+
+        # ----------------------------------------------------
+        # READ STREAM EVENTS
+        # ----------------------------------------------------
+
+        for event in stream:
+
+            event_type = getattr(
+                event,
+                "type",
+                ""
+            )
+
+            # ------------------------------------------------
+            # TEXT DELTA
+            # ------------------------------------------------
+
+            if event_type == "response.output_text.delta":
+
+                delta = getattr(
+                    event,
+                    "delta",
+                    ""
+                )
+
+                if delta:
+
+                    full_answer += delta
+
+                    yield {
+                        "type": "delta",
+                        "text": delta
+                    }
+
+            # ------------------------------------------------
+            # RESPONSE COMPLETED
+            # ------------------------------------------------
+
+            elif event_type == "response.completed":
+
+                break
+
+    except Exception as error:
+
+        print()
+        print("========== STREAM OPENAI ERROR ==========")
+        print(error)
+        print("=========================================")
+        print()
+
+        yield {
+            "type": "error",
+            "error": f"AI generation failed: {error}"
+        }
+
+        return
+
+    # ========================================================
+    # CALCULATE TIMING
+    # ========================================================
+
+    openai_seconds = (
+        time.perf_counter()
+        - openai_start
+    )
+
+    total_seconds = (
+        time.perf_counter()
+        - total_start
+    )
+
+    # ========================================================
+    # CHECK EMPTY ANSWER
+    # ========================================================
+
+    if not full_answer.strip():
+
+        yield {
+            "type": "error",
+            "error": "The AI returned an empty answer."
+        }
+
+        return
+
+    # ========================================================
+    # FINAL RESPONSE
+    # ========================================================
+
+    yield {
+        "type": "done",
+
+        "answer": full_answer.strip(),
+
+        "sources": sources,
+
+        "model": OPENAI_MODEL,
+
+        "timing": {
+            "retrieval_seconds": round(
+                retrieval_seconds,
+                3
+            ),
+
+            "openai_seconds": round(
+                openai_seconds,
+                3
+            ),
+
+            "total_seconds": round(
+                total_seconds,
+                3
+            )
+        }
+    }

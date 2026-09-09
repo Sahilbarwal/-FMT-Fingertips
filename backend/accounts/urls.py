@@ -52,4 +52,11 @@ urlpatterns = [
         views.ask,
         name="ask"
     ),
+
+    # FMT AI Assistant - Streaming
+    path(
+        "ask/stream/",
+        views.ask_stream,
+        name="ask_stream"
+    ),
 ]

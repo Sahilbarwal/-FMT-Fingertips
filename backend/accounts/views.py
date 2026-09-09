@@ -1,7 +1,7 @@
-import logging
+import json
 
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
+from django.http import StreamingHttpResponse
 
 from rest_framework import status
 from rest_framework.decorators import (
@@ -18,14 +18,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import SearchHistory
 from .serializers import RegisterSerializer
 
-from rag.rag_engine import generate_answer
-
-
-# ============================================================
-# LOGGING
-# ============================================================
-
-logger = logging.getLogger(__name__)
+from rag.rag_engine import (
+    generate_answer,
+    stream_answer,
+)
 
 
 # ============================================================
@@ -62,40 +58,25 @@ def register(request):
     Register a new user.
     """
 
-    try:
-        serializer = RegisterSerializer(
-            data=request.data
-        )
+    serializer = RegisterSerializer(
+        data=request.data
+    )
 
-        if not serializer.is_valid():
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        user = serializer.save()
-
+    if not serializer.is_valid():
         return Response(
-            {
-                "message": "Registration successful.",
-                **token_response(user),
-            },
-            status=status.HTTP_201_CREATED,
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
-    except Exception as error:
-        logger.exception("REGISTER ERROR")
+    user = serializer.save()
 
-        print("\n========== REGISTER ERROR ==========")
-        print(error)
-        print("====================================\n")
-
-        return Response(
-            {
-                "error": "Registration failed due to a server error."
-            },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    return Response(
+        {
+            "message": "Registration successful.",
+            **token_response(user),
+        },
+        status=status.HTTP_201_CREATED,
+    )
 
 
 # ============================================================
@@ -109,84 +90,73 @@ def login(request):
     Login using email and password.
     """
 
+    email = request.data.get(
+        "email",
+        ""
+    ).strip().lower()
+
+    password = request.data.get(
+        "password",
+        ""
+    )
+
+    if not email or not password:
+        return Response(
+            {
+                "error":
+                "Email and password are required."
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # --------------------------------------------------------
+    # FIND USER USING EMAIL
+    # --------------------------------------------------------
+
+    from django.contrib.auth.models import User
+
     try:
-        email = request.data.get(
-            "email",
-            ""
-        ).strip().lower()
 
-        password = request.data.get(
-            "password",
-            ""
+        user_object = User.objects.get(
+            email__iexact=email
         )
 
-        if not email or not password:
-            return Response(
-                {
-                    "error": "Email and password are required."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # ----------------------------------------------------
-        # Find user using their email
-        # ----------------------------------------------------
-
-        try:
-            user_object = User.objects.get(
-                email__iexact=email
-            )
-
-        except User.DoesNotExist:
-            return Response(
-                {
-                    "error": "Invalid email or password."
-                },
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
-        # ----------------------------------------------------
-        # Authenticate with actual username
-        # ----------------------------------------------------
-
-        user = authenticate(
-            username=user_object.username,
-            password=password,
-        )
-
-        if user is None:
-            return Response(
-                {
-                    "error": "Invalid email or password."
-                },
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
-        # ----------------------------------------------------
-        # Generate JWT response
-        # ----------------------------------------------------
+    except User.DoesNotExist:
 
         return Response(
             {
-                "message": "Login successful.",
-                **token_response(user),
+                "error":
+                "Invalid email or password."
             },
-            status=status.HTTP_200_OK,
+            status=status.HTTP_401_UNAUTHORIZED,
         )
 
-    except Exception as error:
-        logger.exception("LOGIN ERROR")
+    # --------------------------------------------------------
+    # AUTHENTICATE USER
+    # --------------------------------------------------------
 
-        print("\n========== LOGIN ERROR ==========")
-        print(error)
-        print("=================================\n")
+    user = authenticate(
+        username=user_object.username,
+        password=password,
+    )
+
+    if user is None:
 
         return Response(
             {
-                "error": "Login failed due to a server error."
+                "error":
+                "Invalid email or password."
             },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status=status.HTTP_401_UNAUTHORIZED,
         )
+
+    return Response(
+        {
+            "message": "Login successful.",
+            **token_response(user),
+        },
+        status=status.HTTP_200_OK,
+    )
 
 
 # ============================================================
@@ -205,7 +175,8 @@ def logout(request):
 
     return Response(
         {
-            "message": "Logout successful."
+            "message":
+            "Logout successful."
         },
         status=status.HTTP_200_OK,
     )
@@ -300,9 +271,11 @@ def history(request):
         )
 
         if not question or not answer:
+
             return Response(
                 {
-                    "error": "Question and answer are required."
+                    "error":
+                    "Question and answer are required."
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -315,10 +288,17 @@ def history(request):
 
         return Response(
             {
-                "message": "History saved successfully.",
-                "id": record.id,
-                "question": record.question,
-                "answer": record.answer,
+                "message":
+                "History saved successfully.",
+
+                "id":
+                record.id,
+
+                "question":
+                record.question,
+
+                "answer":
+                record.answer,
             },
             status=status.HTTP_201_CREATED,
         )
@@ -335,21 +315,24 @@ def history(request):
 
         return Response(
             {
-                "message": "History cleared successfully."
+                "message":
+                "History cleared successfully."
             },
             status=status.HTTP_200_OK,
         )
 
 
 # ============================================================
-# FMT AI ASSISTANT
+# FMT AI ASSISTANT — NORMAL ENDPOINT
 # ============================================================
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def ask(request):
     """
-    Main FMT Assistant endpoint.
+    Normal non-streaming FMT Assistant endpoint.
+
+    This endpoint is kept for compatibility.
 
     Frontend sends:
 
@@ -357,22 +340,6 @@ def ask(request):
         "question": "What is rigor mortis?",
         "level": "UG"
     }
-
-    Flow:
-
-    React
-       ↓
-    Django
-       ↓
-    ChromaDB retrieval
-       ↓
-    Relevant FMT textbook chunks
-       ↓
-    OpenAI
-       ↓
-    Detailed answer
-       ↓
-    React
     """
 
     # --------------------------------------------------------
@@ -405,7 +372,8 @@ def ask(request):
 
         return Response(
             {
-                "error": "Question is required."
+                "error":
+                "Question is required."
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
@@ -430,15 +398,20 @@ def ask(request):
 
     except Exception as error:
 
-        print("\n========== ASK ERROR ==========")
-        print(error)
-        print("================================\n")
+        print(
+            "\n========== ASK ERROR =========="
+        )
 
-        logger.exception("ASK ERROR")
+        print(error)
+
+        print(
+            "==============================\n"
+        )
 
         return Response(
             {
-                "error": f"Failed to generate answer: {error}"
+                "error":
+                f"Failed to generate answer: {error}"
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
@@ -449,29 +422,37 @@ def ask(request):
 
     if result.get("error"):
 
-        print("\n========== AI ERROR ==========")
+        print(
+            "\n========== AI ERROR =========="
+        )
 
         print(
             result.get("error")
         )
 
-        print("==============================\n")
+        print(
+            "==============================\n"
+        )
 
         return Response(
             {
-                "error": result.get("error"),
+                "error":
+                result.get("error"),
 
-                "answer": result.get(
+                "answer":
+                result.get(
                     "answer",
                     ""
                 ),
 
-                "sources": result.get(
+                "sources":
+                result.get(
                     "sources",
                     []
                 ),
 
-                "timing": result.get(
+                "timing":
+                result.get(
                     "timing"
                 ),
             },
@@ -497,13 +478,14 @@ def ask(request):
 
         return Response(
             {
-                "error": "The AI returned an empty answer."
+                "error":
+                "The AI returned an empty answer."
             },
             status=status.HTTP_502_BAD_GATEWAY,
         )
 
     # --------------------------------------------------------
-    # SAVE TO HISTORY
+    # SAVE HISTORY
     # --------------------------------------------------------
 
     try:
@@ -516,15 +498,10 @@ def ask(request):
 
     except Exception as error:
 
-        # History failure should NOT prevent
-        # the student from receiving the answer.
-
         print(
             "History save error:",
             error
         )
-
-        logger.exception("HISTORY SAVE ERROR")
 
     # --------------------------------------------------------
     # RESPONSE
@@ -532,26 +509,276 @@ def ask(request):
 
     return Response(
         {
-            "question": question,
+            "question":
+            question,
 
-            "level": level,
+            "level":
+            level,
 
-            "answer": answer,
+            "answer":
+            answer,
 
-            "sources": result.get(
+            "sources":
+            result.get(
                 "sources",
                 []
             ),
 
-            "model": result.get(
+            "model":
+            result.get(
                 "model"
             ),
 
-            "source": "local_rag_openai",
+            "source":
+            "local_rag_openai",
 
-            "timing": result.get(
+            "timing":
+            result.get(
                 "timing"
             ),
         },
         status=status.HTTP_200_OK,
     )
+
+
+# ============================================================
+# FMT AI ASSISTANT — STREAMING ENDPOINT
+# ============================================================
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def ask_stream(request):
+    """
+    Streaming FMT Assistant endpoint.
+
+    Frontend sends:
+
+    {
+        "question": "What is rigor mortis?",
+        "level": "UG"
+    }
+
+    The endpoint returns newline-delimited JSON (NDJSON).
+
+    Example:
+
+    {"type":"meta", ...}
+    {"type":"delta","text":"Rigor"}
+    {"type":"delta","text":" mortis"}
+    {"type":"delta","text":" is"}
+    ...
+    {"type":"done", ...}
+    """
+
+    # --------------------------------------------------------
+    # GET QUESTION
+    # --------------------------------------------------------
+
+    question = str(
+        request.data.get(
+            "question",
+            ""
+        )
+    ).strip()
+
+    # --------------------------------------------------------
+    # GET LEVEL
+    # --------------------------------------------------------
+
+    level = str(
+        request.data.get(
+            "level",
+            "UG"
+        )
+    ).upper().strip()
+
+    # --------------------------------------------------------
+    # VALIDATE QUESTION
+    # --------------------------------------------------------
+
+    if not question:
+
+        return Response(
+            {
+                "error":
+                "Question is required."
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # --------------------------------------------------------
+    # VALIDATE LEVEL
+    # --------------------------------------------------------
+
+    if level not in ["UG", "PG"]:
+        level = "UG"
+
+    # --------------------------------------------------------
+    # STREAM GENERATOR
+    # --------------------------------------------------------
+
+    def event_stream():
+
+        final_answer = ""
+
+        final_sources = []
+
+        final_model = None
+
+        final_timing = None
+
+        try:
+
+            # ------------------------------------------------
+            # GET EVENTS FROM RAG ENGINE
+            # ------------------------------------------------
+
+            for event in stream_answer(
+                question,
+                level
+            ):
+
+                event_type = event.get(
+                    "type"
+                )
+
+                # --------------------------------------------
+                # METADATA
+                # --------------------------------------------
+
+                if event_type == "meta":
+
+                    final_sources = event.get(
+                        "sources",
+                        []
+                    )
+
+                    final_model = event.get(
+                        "model"
+                    )
+
+                # --------------------------------------------
+                # TEXT DELTA
+                # --------------------------------------------
+
+                elif event_type == "delta":
+
+                    final_answer += event.get(
+                        "text",
+                        ""
+                    )
+
+                # --------------------------------------------
+                # FINAL EVENT
+                # --------------------------------------------
+
+                elif event_type == "done":
+
+                    final_answer = event.get(
+                        "answer",
+                        final_answer
+                    )
+
+                    final_sources = event.get(
+                        "sources",
+                        final_sources
+                    )
+
+                    final_model = event.get(
+                        "model",
+                        final_model
+                    )
+
+                    final_timing = event.get(
+                        "timing"
+                    )
+
+                # --------------------------------------------
+                # SEND EVENT TO FRONTEND
+                # --------------------------------------------
+
+                yield (
+                    json.dumps(
+                        event,
+                        ensure_ascii=False
+                    )
+                    + "\n"
+                )
+
+            # ------------------------------------------------
+            # SAVE COMPLETED ANSWER TO HISTORY
+            # ------------------------------------------------
+
+            if final_answer.strip():
+
+                try:
+
+                    SearchHistory.objects.create(
+                        user=request.user,
+                        question=question,
+                        answer=final_answer.strip(),
+                    )
+
+                except Exception as error:
+
+                    print(
+                        "Streaming history save error:",
+                        error
+                    )
+
+        except Exception as error:
+
+            print()
+            print(
+                "========== STREAM ERROR =========="
+            )
+
+            print(error)
+
+            print(
+                "================================="
+            )
+
+            print()
+
+            error_event = {
+                "type": "error",
+                "error":
+                f"Failed to generate answer: {error}"
+            }
+
+            yield (
+                json.dumps(
+                    error_event,
+                    ensure_ascii=False
+                )
+                + "\n"
+            )
+
+    # --------------------------------------------------------
+    # STREAMING HTTP RESPONSE
+    # --------------------------------------------------------
+
+    response = StreamingHttpResponse(
+        event_stream(),
+        content_type=(
+            "application/x-ndjson; "
+            "charset=utf-8"
+        ),
+    )
+
+    # --------------------------------------------------------
+    # PREVENT CACHING
+    # --------------------------------------------------------
+
+    response["Cache-Control"] = (
+        "no-cache, no-store, must-revalidate"
+    )
+
+    # --------------------------------------------------------
+    # TELL NGINX / PROXY NOT TO BUFFER
+    # --------------------------------------------------------
+
+    response["X-Accel-Buffering"] = "no"
+
+    return response
