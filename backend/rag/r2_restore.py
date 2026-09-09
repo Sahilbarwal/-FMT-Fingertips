@@ -1,7 +1,7 @@
 import os
 import shutil
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import boto3
 from botocore.config import Config
@@ -157,17 +157,61 @@ def download_from_r2():
 
 
 # =========================================================
+# Find Chroma Database Inside ZIP
+# =========================================================
+
+def find_chroma_file(zip_ref):
+    """
+    Find chroma.sqlite3 inside the ZIP.
+
+    We do not depend on one exact ZIP path string.
+
+    Accepted examples:
+
+        vectorstore/chroma.sqlite3
+        ./vectorstore/chroma.sqlite3
+        vectorstore\\chroma.sqlite3
+
+    This makes the restore process more tolerant of
+    ZIP path formatting differences.
+    """
+
+    matches = []
+
+    for name in zip_ref.namelist():
+
+        normalized = name.replace("\\", "/").lstrip("./")
+
+        path = PurePosixPath(normalized)
+
+        if path.name.lower() == "chroma.sqlite3":
+            matches.append(name)
+
+    if not matches:
+        return None
+
+    # Prefer the expected vectorstore location if available.
+    for name in matches:
+
+        normalized = name.replace("\\", "/").lstrip("./")
+
+        if normalized.lower() == "vectorstore/chroma.sqlite3":
+            return name
+
+    return matches[0]
+
+
+# =========================================================
 # Validate ZIP Structure
 # =========================================================
 
 def validate_zip():
     """
-    Quickly verify that the ZIP can be opened and that
-    the expected ChromaDB database exists inside it.
+    Quickly verify that the ZIP can be opened and contains
+    the ChromaDB database.
 
-    We do NOT use testzip(), because that caused the
-    Render Free deployment to spend more than 18 minutes
-    checking the archive.
+    We intentionally do NOT use testzip(), because that caused
+    very long validation times on Render Free.
     """
 
     print("=" * 60)
@@ -186,16 +230,60 @@ def validate_zip():
 
     try:
 
-        with zipfile.ZipFile(ZIP_PATH, "r") as zip_ref:
+        with zipfile.ZipFile(
+            ZIP_PATH,
+            "r",
+        ) as zip_ref:
 
-            expected_file = "vectorstore/chroma.sqlite3"
+            # Make sure the ZIP can be read.
+            bad_file = zip_ref.testzip()
 
-            if expected_file not in zip_ref.namelist():
+            if bad_file:
+                raise RuntimeError(
+                    f"ZIP contains a corrupted file: {bad_file}"
+                )
+
+            chroma_file = find_chroma_file(
+                zip_ref
+            )
+
+            if chroma_file is None:
+
+                print(
+                    "ZIP contents containing 'chroma':"
+                )
+
+                for name in zip_ref.namelist():
+
+                    if "chroma" in name.lower():
+
+                        print(
+                            f"  - {name}"
+                        )
 
                 raise RuntimeError(
-                    "vectorstore.zip does not contain "
-                    "vectorstore/chroma.sqlite3."
+                    "vectorstore.zip contains no "
+                    "chroma.sqlite3 file."
                 )
+
+            print(
+                f"Found ChromaDB file inside ZIP: "
+                f"{chroma_file}"
+            )
+
+            info = zip_ref.getinfo(
+                chroma_file
+            )
+
+            print(
+                f"ChromaDB compressed size: "
+                f"{info.compress_size / (1024 * 1024):.2f} MB"
+            )
+
+            print(
+                f"ChromaDB uncompressed size: "
+                f"{info.file_size / (1024 * 1024):.2f} MB"
+            )
 
     except zipfile.BadZipFile as exc:
 
@@ -208,9 +296,37 @@ def validate_zip():
         "ZIP check successful."
     )
 
-    print(
-        "Found: vectorstore/chroma.sqlite3"
-    )
+
+# =========================================================
+# Safe ZIP Extraction
+# =========================================================
+
+def safe_extract(zip_ref, destination):
+    """
+    Safely extract ZIP contents.
+
+    Prevents files inside the archive from escaping
+    the destination directory.
+    """
+
+    destination = Path(destination).resolve()
+
+    for member in zip_ref.infolist():
+
+        member_path = (
+            destination
+            / member.filename
+        ).resolve()
+
+        if not str(member_path).startswith(
+            str(destination) + os.sep
+        ):
+            raise RuntimeError(
+                f"Unsafe ZIP path detected: "
+                f"{member.filename}"
+            )
+
+    zip_ref.extractall(destination)
 
 
 # =========================================================
@@ -221,15 +337,11 @@ def restore_vectorstore():
     """
     Extract the ZIP directly into RAG_DIR.
 
-    The ZIP structure is known:
+    Expected ZIP structure:
 
         vectorstore/
             chroma.sqlite3
             UUID directories...
-    
-    Therefore extraction produces:
-
-        backend/rag/vectorstore/
     """
 
     print("=" * 60)
@@ -246,7 +358,9 @@ def restore_vectorstore():
             "Removing existing vectorstore..."
         )
 
-        shutil.rmtree(VECTORSTORE_DIR)
+        shutil.rmtree(
+            VECTORSTORE_DIR
+        )
 
     # -----------------------------------------------------
     # Extract directly into RAG_DIR
@@ -258,15 +372,21 @@ def restore_vectorstore():
 
     try:
 
-        with zipfile.ZipFile(ZIP_PATH, "r") as zip_ref:
+        with zipfile.ZipFile(
+            ZIP_PATH,
+            "r",
+        ) as zip_ref:
 
-            zip_ref.extractall(RAG_DIR)
+            safe_extract(
+                zip_ref,
+                RAG_DIR,
+            )
 
     except zipfile.BadZipFile as exc:
 
         raise RuntimeError(
-            "Could not extract vectorstore.zip because "
-            "the ZIP file is invalid."
+            "Could not extract vectorstore.zip "
+            "because the ZIP file is invalid."
         ) from exc
 
     print(
@@ -289,7 +409,8 @@ def restore_vectorstore():
     # -----------------------------------------------------
 
     chroma_db = (
-        VECTORSTORE_DIR / "chroma.sqlite3"
+        VECTORSTORE_DIR
+        / "chroma.sqlite3"
     )
 
     if not chroma_db.exists():
