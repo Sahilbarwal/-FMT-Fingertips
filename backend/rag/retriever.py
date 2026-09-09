@@ -19,12 +19,16 @@ VECTORSTORE_DIR = BASE_DIR / "vectorstore"
 
 COLLECTION_NAME = "fmt_knowledge_base"
 
-# Number of chunks finally sent to the AI
+# Number of chunks finally returned to rag_engine.py
 TOP_K = 10
 
-# ChromaDB searches the entire knowledge base and returns
-# the top 100 most relevant candidates
-INITIAL_RESULTS = 100
+# IMPORTANT:
+# Keep this low because Render Free has limited RAM.
+#
+# Previously this was 100.
+# We only need a small candidate pool before selecting
+# the final diverse chunks.
+INITIAL_RESULTS = 20
 
 # Maximum number of chunks allowed from one PDF
 MAX_CHUNKS_PER_SOURCE = 3
@@ -38,7 +42,7 @@ client = chromadb.PersistentClient(
     path=str(VECTORSTORE_DIR)
 )
 
-collection = client.get_or_create_collection(
+collection = client.get_collection(
     name=COLLECTION_NAME
 )
 
@@ -65,6 +69,7 @@ def get_chunk_number(chunk):
         return int(chunk)
 
     except (TypeError, ValueError):
+
         return None
 
 
@@ -83,7 +88,6 @@ def is_nearby_chunk(candidate, selected):
     if candidate_chunk is None:
         return False
 
-
     for selected_item in selected:
 
         if (
@@ -92,7 +96,6 @@ def is_nearby_chunk(candidate, selected):
         ):
             continue
 
-
         selected_chunk = get_chunk_number(
             selected_item["chunk"]
         )
@@ -100,14 +103,12 @@ def is_nearby_chunk(candidate, selected):
         if selected_chunk is None:
             continue
 
-
         # Avoid immediately consecutive chunks
         if abs(
             candidate_chunk - selected_chunk
         ) <= 1:
 
             return True
-
 
     return False
 
@@ -118,14 +119,15 @@ def is_nearby_chunk(candidate, selected):
 
 def retrieve_context(question, top_k=TOP_K):
 
-
     # --------------------------------------------------------
     # VALIDATE QUESTION
     # --------------------------------------------------------
 
     if not question or not question.strip():
 
-        print("WARNING: Empty question.")
+        print(
+            "WARNING: Empty question."
+        )
 
         return []
 
@@ -158,12 +160,20 @@ def retrieve_context(question, top_k=TOP_K):
 
 
     # --------------------------------------------------------
-    # NUMBER OF CANDIDATES TO RETRIEVE
+    # NUMBER OF CANDIDATES
     # --------------------------------------------------------
 
+    # We deliberately keep this small.
+    #
+    # Render Free has limited RAM and retrieving 100 chunks
+    # creates unnecessary memory pressure.
+    #
+    # We still retrieve more candidates than the final top_k
+    # so that source diversity can work.
+
     initial_results = max(
-        INITIAL_RESULTS,
-        top_k * 10
+        top_k * 2,
+        INITIAL_RESULTS
     )
 
     initial_results = min(
@@ -176,10 +186,18 @@ def retrieve_context(question, top_k=TOP_K):
     # DEBUG
     # ========================================================
 
-    print("\n")
-    print("=" * 70)
-    print("RAG RETRIEVAL DEBUG")
-    print("=" * 70)
+    print(
+        "\n"
+        + "=" * 70
+    )
+
+    print(
+        "RAG RETRIEVAL"
+    )
+
+    print(
+        "=" * 70
+    )
 
     print(
         "Question:",
@@ -196,13 +214,18 @@ def retrieve_context(question, top_k=TOP_K):
         initial_results
     )
 
-    print("=" * 70)
+    print(
+        "Final chunks requested:",
+        top_k
+    )
+
+    print(
+        "=" * 70
+    )
 
 
     # ========================================================
     # QUERY CHROMADB
-    #
-    # This searches the entire vector collection.
     # ========================================================
 
     try:
@@ -262,7 +285,6 @@ def retrieve_context(question, top_k=TOP_K):
 
     for index, document in enumerate(documents):
 
-
         if not document:
             continue
 
@@ -297,12 +319,10 @@ def retrieve_context(question, top_k=TOP_K):
         # ----------------------------------------------------
 
         source = normalize_source(
-
             metadata.get(
                 "source",
                 "Unknown source"
             )
-
         )
 
 
@@ -316,18 +336,17 @@ def retrieve_context(question, top_k=TOP_K):
         )
 
 
-        candidates.append(
+        # ----------------------------------------------------
+        # STORE CANDIDATE
+        # ----------------------------------------------------
 
+        candidates.append(
             {
                 "text": document,
-
                 "source": source,
-
                 "chunk": chunk,
-
                 "distance": distance
             }
-
         )
 
 
@@ -345,23 +364,32 @@ def retrieve_context(question, top_k=TOP_K):
 
             if item["distance"] is None
 
-            else float(item["distance"])
+            else float(
+                item["distance"]
+            )
 
     )
 
 
     # ========================================================
-    # SHOW TOP 30 RAW RESULTS
+    # SHOW RAW RESULTS
     # ========================================================
 
-    print("\n")
-    print("TOP 30 RAW RESULTS")
-    print("-" * 70)
+    print(
+        "\nTOP RAW RESULTS"
+    )
+
+    print(
+        "-" * 70
+    )
 
 
     for index, item in enumerate(
-        candidates[:30],
+
+        candidates[:20],
+
         start=1
+
     ):
 
         print(
@@ -377,19 +405,13 @@ def retrieve_context(question, top_k=TOP_K):
         )
 
 
-    print("-" * 70)
+    print(
+        "-" * 70
+    )
 
 
     # ========================================================
     # GROUP CANDIDATES BY SOURCE
-    #
-    # Example:
-    #
-    # sources = {
-    #   "Reddy.pdf": [...],
-    #   "Modi.pdf": [...],
-    #   "AIIMS syllabus.pdf": [...]
-    # }
     # ========================================================
 
     sources = defaultdict(list)
@@ -399,9 +421,7 @@ def retrieve_context(question, top_k=TOP_K):
 
         sources[
             item["source"]
-        ].append(
-            item
-        )
+        ].append(item)
 
 
     # ========================================================
@@ -418,7 +438,9 @@ def retrieve_context(question, top_k=TOP_K):
 
                 if item["distance"] is None
 
-                else float(item["distance"])
+                else float(
+                    item["distance"]
+                )
 
         )
 
@@ -426,8 +448,7 @@ def retrieve_context(question, top_k=TOP_K):
     # ========================================================
     # SORT SOURCES
     #
-    # A source whose best chunk has the best distance
-    # appears first.
+    # Source with the best chunk comes first.
     # ========================================================
 
     sorted_sources = sorted(
@@ -444,7 +465,8 @@ def retrieve_context(question, top_k=TOP_K):
 
                 float("inf")
 
-                if sources[source][0]["distance"] is None
+                if sources[source][0]["distance"]
+                is None
 
                 else float(
                     sources[source][0]["distance"]
@@ -467,13 +489,12 @@ def retrieve_context(question, top_k=TOP_K):
     # ========================================================
     # PASS 1
     #
-    # Take ONE BEST chunk from each relevant PDF first.
+    # Take ONE BEST chunk from each PDF first.
     #
-    # This creates diversity.
+    # This gives us source diversity.
     # ========================================================
 
     for source in sorted_sources:
-
 
         if len(selected) >= top_k:
             break
@@ -500,7 +521,11 @@ def retrieve_context(question, top_k=TOP_K):
     # ========================================================
     # PASS 2
     #
-    # Add second/third chunks from relevant PDFs.
+    # Add additional chunks while:
+    #
+    # 1. Staying within MAX_CHUNKS_PER_SOURCE
+    # 2. Avoiding duplicate chunks
+    # 3. Avoiding immediately neighbouring chunks
     # ========================================================
 
     round_number = 1
@@ -508,33 +533,39 @@ def retrieve_context(question, top_k=TOP_K):
 
     while len(selected) < top_k:
 
-
         added_something = False
 
 
         for source in sorted_sources:
 
-
             if len(selected) >= top_k:
                 break
 
 
-            # Maximum 3 chunks per source
+            # ------------------------------------------------
+            # MAXIMUM CHUNKS PER SOURCE
+            # ------------------------------------------------
+
             if (
                 source_counts[source]
                 >= MAX_CHUNKS_PER_SOURCE
             ):
+
                 continue
 
 
             source_items = sources[source]
 
 
-            # No more chunks from this source
+            # ------------------------------------------------
+            # NO MORE ITEMS
+            # ------------------------------------------------
+
             if (
                 round_number
                 >= len(source_items)
             ):
+
                 continue
 
 
@@ -550,6 +581,7 @@ def retrieve_context(question, top_k=TOP_K):
             duplicate = any(
 
                 (
+
                     selected_item["source"]
                     == item["source"]
 
@@ -579,9 +611,12 @@ def retrieve_context(question, top_k=TOP_K):
             # ------------------------------------------------
 
             if is_nearby_chunk(
+
                 item,
                 selected
+
             ):
+
                 continue
 
 
@@ -595,7 +630,6 @@ def retrieve_context(question, top_k=TOP_K):
 
 
             source_counts[source] += 1
-
 
             added_something = True
 
@@ -615,15 +649,26 @@ def retrieve_context(question, top_k=TOP_K):
     # FINAL DEBUG
     # ========================================================
 
-    print("\n")
-    print("=" * 70)
-    print("FINAL SELECTED CONTEXT")
-    print("=" * 70)
+    print(
+        "\n"
+        + "=" * 70
+    )
+
+    print(
+        "FINAL SELECTED CONTEXT"
+    )
+
+    print(
+        "=" * 70
+    )
 
 
     for index, item in enumerate(
+
         selected,
+
         start=1
+
     ):
 
         print(
@@ -639,9 +684,13 @@ def retrieve_context(question, top_k=TOP_K):
         )
 
 
-    print("\n")
-    print("SOURCE DISTRIBUTION")
-    print("-" * 70)
+    print(
+        "\nSOURCE DISTRIBUTION"
+    )
+
+    print(
+        "-" * 70
+    )
 
 
     for source, count in source_counts.items():
@@ -649,14 +698,14 @@ def retrieve_context(question, top_k=TOP_K):
         print(
 
             f"{source}: "
-
             f"{count} chunk(s)"
 
         )
 
 
-    print("=" * 70)
-    print("\n")
+    print(
+        "=" * 70
+    )
 
 
     # ========================================================
@@ -668,16 +717,12 @@ def retrieve_context(question, top_k=TOP_K):
 
     for item in selected:
 
-
         final_results.append(
 
             {
                 "text": item["text"],
-
                 "source": item["source"],
-
                 "chunk": item["chunk"],
-
                 "distance": item["distance"]
             }
 
@@ -685,44 +730,3 @@ def retrieve_context(question, top_k=TOP_K):
 
 
     return final_results
-
-
-# ============================================================
-# BUILD CONTEXT FOR GPT
-# ============================================================
-
-def build_context(results):
-
-
-    context_parts = []
-
-
-    for index, item in enumerate(
-        results,
-        start=1
-    ):
-
-
-        context_parts.append(
-
-            f"""
-============================================================
-SOURCE {index}
-============================================================
-
-PDF / BOOK:
-{item["source"]}
-
-CHUNK:
-{item["chunk"]}
-
-CONTENT:
-{item["text"]}
-"""
-
-        )
-
-
-    return "\n".join(
-        context_parts
-    )
