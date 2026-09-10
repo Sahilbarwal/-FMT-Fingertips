@@ -3,6 +3,7 @@ import remarkGfm from "remark-gfm";
 import { useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 import {
   Bot,
@@ -26,6 +27,8 @@ import {
   Trash2,
   Pencil,
   Search,
+  Menu,
+  X,
 } from "lucide-react";
 
 import "../styles/chat.css";
@@ -33,7 +36,10 @@ import "../styles/history.css";
 import "../styles/profile.css";
 
 const API_URL =
-  "https://fmt-fingertips-backend.onrender.com/ask/stream/";
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1")
+    ? "http://127.0.0.1:8000/ask/stream/"
+    : "https://fmt-fingertips-backend.onrender.com/ask/stream/";
 
 const CHAT_STORAGE_KEY = "fmt_recent_chats";
 
@@ -51,6 +57,7 @@ export default function Chat() {
 
   const [openChatMenu, setOpenChatMenu] = useState(null);
   const [studentMenuOpen, setStudentMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [view, setView] = useState("chat");
 
@@ -65,6 +72,7 @@ export default function Chat() {
   const textareaRef = useRef(null);
   const hasHandledIncomingQuestion = useRef(false);
 
+  const navigate = useNavigate();
   // =========================================================
   // LOAD SAVED CHATS
   // =========================================================
@@ -507,6 +515,43 @@ export default function Chat() {
   };
 
   // =========================================================
+  // REFRESH ACCESS TOKEN
+  // =========================================================
+
+  const refreshAccessToken = async () => {
+    const refreshToken = localStorage.getItem("refresh");
+
+    if (!refreshToken) return null;
+
+    try {
+      const response = await fetch(
+        "https://fmt-fingertips-backend.onrender.com/token/refresh/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            refresh: refreshToken,
+          }),
+        }
+      );
+
+      if (!response.ok) return null;
+
+      const data = await response.json();
+
+      if (!data?.access) return null;
+
+      localStorage.setItem("access", data.access);
+      return data.access;
+    } catch (error) {
+      console.error("Token refresh error:", error);
+      return null;
+    }
+  };
+
+  // =========================================================
   // SEND QUESTION
   // =========================================================
 
@@ -590,43 +635,45 @@ export default function Chat() {
     }
 
     try {
-      const response =
-        await fetch(
+      const requestOptions = (accessToken) => ({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          question: trimmedQuestion,
+          level: effectiveLevel,
+        }),
+      });
+
+      let response = await fetch(
+        API_URL,
+        requestOptions(token)
+      );
+
+      // If the access token expired, refresh it once and retry.
+      if (response.status === 401) {
+        const newAccessToken = await refreshAccessToken();
+
+        if (!newAccessToken) {
+          localStorage.removeItem("access");
+          localStorage.removeItem("refresh");
+          window.location.href = "/login";
+          return;
+        }
+
+        response = await fetch(
           API_URL,
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-
-              Authorization:
-                `Bearer ${token}`,
-            },
-
-            body: JSON.stringify({
-              question:
-                trimmedQuestion,
-              level:
-                effectiveLevel,
-            }),
-          }
+          requestOptions(newAccessToken)
         );
 
-      if (
-        response.status === 401
-      ) {
-        localStorage.removeItem(
-          "access"
-        );
-        localStorage.removeItem(
-          "refresh"
-        );
-
-        window.location.href =
-          "/login";
-
-        return;
+        if (response.status === 401) {
+          localStorage.removeItem("access");
+          localStorage.removeItem("refresh");
+          window.location.href = "/login";
+          return;
+        }
       }
 
       if (!response.ok) {
@@ -1061,6 +1108,7 @@ export default function Chat() {
     setActiveChatId(null);
     setOpenChatMenu(null);
     setView("chat");
+    setSidebarOpen(false);
 
     setTimeout(() => {
       textareaRef.current?.focus();
@@ -1255,6 +1303,21 @@ export default function Chat() {
   };
 
   // =========================================================
+  // MOBILE / TABLET / DESKTOP DRAWER
+  // =========================================================
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+    setOpenChatMenu(null);
+  };
+
+  const handleDrawerView = (nextView) => {
+    setOpenChatMenu(null);
+    setView(nextView);
+    setSidebarOpen(false);
+  };
+
+  // =========================================================
   // RENDER
   // =========================================================
 
@@ -1270,33 +1333,56 @@ export default function Chat() {
       {/* SIDEBAR */}
       {/* ================================================= */}
 
-      <aside className="chat-sidebar">
+      <aside
+        className={
+          sidebarOpen
+            ? "chat-sidebar open"
+            : "chat-sidebar"
+        }
+        aria-hidden={!sidebarOpen}
+      >
 
-        {/* BRAND */}
+        {/* DRAWER HEADER */}
 
-        <div className="sidebar-brand">
-          <div className="brand-icon">
-            <FileText size={21} />
-          </div>
+        <div className="sidebar-drawer-header">
+          <button
+            type="button"
+            className="sidebar-close-btn"
+            onClick={closeSidebar}
+            aria-label="Close navigation"
+            title="Close navigation"
+          >
+            <X size={24} />
+          </button>
 
-          <div>
-            <h1>
-              FMT@Fingertips
-            </h1>
+          <button
+            type="button"
+            className="sidebar-brand"
+            onClick={() => {
+              closeSidebar();
+              navigate("/");
+            }}
+            title="Go to Home"
+          >
+            <div className="brand-icon">
+              <FileText size={21} />
+            </div>
 
-            <span>
-              Forensic Medicine Assistant
-            </span>
-          </div>
+            <div>
+              <h1>FMT@Fingertips</h1>
+              <span>Forensic Medicine Assistant</span>
+            </div>
+          </button>
         </div>
 
         {/* NEW CHAT */}
 
         <button
           className="new-chat-btn"
-          onClick={
-            handleNewChat
-          }
+          onClick={() => {
+            handleNewChat();
+            closeSidebar();
+          }}
         >
           <Plus size={19} />
 
@@ -1316,7 +1402,7 @@ export default function Chat() {
                 : ""
             }
             onClick={() =>
-              setView("history")
+              handleDrawerView("history")
             }
           >
             <History size={19} />
@@ -1333,7 +1419,7 @@ export default function Chat() {
                 : ""
             }
             onClick={() =>
-              setView("profile")
+              handleDrawerView("profile")
             }
           >
             <User size={19} />
@@ -1548,6 +1634,15 @@ export default function Chat() {
 
       </aside>
 
+      {sidebarOpen && (
+        <button
+          type="button"
+          className="sidebar-overlay"
+          onClick={closeSidebar}
+          aria-label="Close navigation overlay"
+        />
+      )}
+
       {/* ================================================= */}
       {/* MAIN */}
       {/* ================================================= */}
@@ -1557,6 +1652,16 @@ export default function Chat() {
         {/* TOP BAR */}
 
         <header className="chat-topbar">
+
+          <button
+            type="button"
+            className="menu-toggle-btn"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open navigation"
+            title="Open navigation"
+          >
+            <Menu size={25} />
+          </button>
 
           <div className="mobile-brand">
 
@@ -1892,88 +1997,10 @@ export default function Chat() {
 
                               </div>
 
-                              {/* SOURCES */}
-
-                              {Array.isArray(
-                                message.sources
-                              ) &&
-                                message.sources.length >
-                                  0 && (
-                                  <div className="answer-sources">
-
-                                    {/* IMPORTANT:
-                                        No FileText SVG here.
-                                        This prevents the stray
-                                        "svg" artifact. */}
-
-                                    <div className="sources-title">
-                                      <span>
-                                        FMT Material Used
-                                      </span>
-                                    </div>
-
-                                    <div className="sources-list">
-
-                                      {message.sources.map(
-                                        (
-                                          source,
-                                          index
-                                        ) => {
-
-                                          if (
-                                            typeof source ===
-                                            "string"
-                                          ) {
-                                            return (
-                                              <div
-                                                key={
-                                                  index
-                                                }
-                                                className="source-item"
-                                              >
-                                                {
-                                                  source
-                                                }
-                                              </div>
-                                            );
-                                          }
-
-                                          return (
-                                            <div
-                                              key={
-                                                index
-                                              }
-                                              className="source-item"
-                                            >
-                                              <strong>
-                                                {
-                                                  source?.source ||
-                                                  "FMT Material"
-                                                }
-                                              </strong>
-
-                                              {source?.chunk !==
-                                                undefined &&
-                                                source?.chunk !==
-                                                  null && (
-                                                  <span>
-                                                    {" "}
-                                                    • Chunk{" "}
-                                                    {
-                                                      source.chunk
-                                                    }
-                                                  </span>
-                                                )}
-                                            </div>
-                                          );
-                                        }
-                                      )}
-
-                                    </div>
-
-                                  </div>
-                                )}
-
+                              {/* SOURCES HIDDEN
+                                  Retrieval still happens in the backend.
+                                  Source/chunk information is intentionally
+                                  not displayed in the student UI. */}
                             </div>
                           </>
                         )}

@@ -2181,3 +2181,551 @@ button:disabled {
 
   color: #cdd9e6;
 }
+
+.sidebar-brand {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.sidebar-brand:hover {
+  opacity: 0.85;
+}
+
+.sidebar-brand h1,
+.sidebar-brand span {
+  pointer-events: none;
+}
+/* =========================================================
+   CHATGPT-STYLE NAVIGATION DRAWER
+   Add this AFTER the existing chat.css rules.
+   ========================================================= */
+
+.chat-app {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Main area uses the full viewport when the drawer is closed. */
+.chat-main {
+  width: 100%;
+  height: 100dvh;
+  min-height: 100vh;
+  margin-left: 0 !important;
+}
+
+/* ---------------------------------------------------------
+   SIDEBAR / DRAWER
+   --------------------------------------------------------- */
+.chat-sidebar {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 20000 !important;
+  width: 320px;
+  max-width: min(86vw, 320px);
+  height: 100dvh;
+  min-height: 100vh;
+  overflow: hidden;
+  transform: translateX(-105%);
+  transition: transform 0.24s ease, box-shadow 0.24s ease;
+  box-shadow: none;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.chat-sidebar.open {
+  transform: translateX(0) !important;
+  box-shadow: 18px 0 50px rgba(15, 23, 42, 0.18);
+}
+
+/* Keep the sidebar contents scrollable without moving the whole page. */
+.chat-sidebar .recent-list {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sidebar-brand-wrap .sidebar-brand {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.sidebar-close-btn:hover {
+  background: rgba(127, 127, 127, 0.12);
+  transform: scale(1.04);
+}
+
+/* ---------------------------------------------------------
+   BACKDROP
+   --------------------------------------------------------- */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 19990 !important;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: rgba(15, 23, 42, 0.32);
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------
+   HAMBURGER
+   --------------------------------------------------------- */
+.menu-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.menu-toggle-btn:hover {
+  background: #eef5f4;
+  border-color: #9dbfbc;
+  transform: translateY(-1px);
+}
+
+.chat-topbar {
+  position: relative;
+  z-index: 100;
+}
+
+.mobile-brand {
+  min-width: 0;
+}
+
+.mobile-brand strong,
+.mobile-brand span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dark mode */
+.chat-app.dark .menu-toggle-btn {
+  background: rgba(30, 41, 59, 0.92);
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.chat-app.dark .menu-toggle-btn:hover {
+  background: #263449;
+  border-color: #4d8582;
+}
+
+/* ---------------------------------------------------------
+   TABLET
+   --------------------------------------------------------- */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .chat-sidebar {
+    width: 300px;
+    max-width: 82vw;
+  }
+
+  .chat-topbar {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+  .chat-content {
+    width: min(94%, 900px);
+  }
+}
+
+/* ---------------------------------------------------------
+   MOBILE
+   --------------------------------------------------------- */
+@media (max-width: 767px) {
+  .chat-sidebar {
+    width: min(310px, 88vw);
+    max-width: 88vw;
+  }
+
+  .chat-topbar {
+    min-height: 64px;
+    padding: 10px 12px !important;
+    gap: 10px;
+  }
+
+  .menu-toggle-btn {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+    border-radius: 10px;
+  }
+
+  .mobile-brand {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-brand-icon {
+    flex: 0 0 auto;
+  }
+
+  .topbar-right {
+    gap: 6px !important;
+  }
+
+  .theme-toggle > span,
+  .student-menu > span,
+  .student-menu > svg {
+    display: none !important;
+  }
+
+  .theme-toggle,
+  .student-menu {
+    min-width: 40px;
+    width: 40px;
+    height: 40px;
+    padding: 0 !important;
+    justify-content: center;
+  }
+
+  .student-avatar {
+    margin: 0 !important;
+  }
+
+  .chat-header {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .chat-scroll-area {
+    min-height: 0;
+  }
+
+  .chat-input-area {
+    padding: 8px 10px 10px !important;
+  }
+
+  .chat-disclaimer {
+    font-size: 10px !important;
+    line-height: 1.4 !important;
+    margin: 7px 5px 0 !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .chat-sidebar {
+    width: 300px;
+    max-width: 88vw;
+  }
+
+  .chat-topbar {
+    padding: 8px 9px !important;
+  }
+
+  .menu-toggle-btn,
+  .theme-toggle,
+  .student-menu {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+  }
+
+  .mobile-brand-icon {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .mobile-brand strong {
+    font-size: 14px !important;
+  }
+
+  .mobile-brand span {
+    font-size: 10px !important;
+  }
+
+  .assistant-title-row {
+    gap: 7px !important;
+  }
+
+  .assistant-title-row h2 {
+    font-size: 20px !important;
+  }
+
+  .level-badge {
+    padding: 4px 7px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .topbar-right {
+    gap: 3px !important;
+  }
+
+  .menu-toggle-btn,
+  .theme-toggle,
+  .student-menu {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+
+  .mobile-brand-icon {
+    width: 35px !important;
+    height: 35px !important;
+  }
+}
+
+
+/* =========================================================
+   DRAWER VISIBILITY / STACKING FIX
+   ========================================================= */
+
+.chat-sidebar {
+  pointer-events: auto !important;
+}
+
+.chat-sidebar.open {
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.sidebar-overlay {
+  pointer-events: auto !important;
+}
+
+/* Never blur the actual chat page. Only dim it behind the drawer. */
+.sidebar-overlay {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* =========================================================
+   FMT@FINGERTIPS — CHATGPT STYLE NAVIGATION DRAWER
+   Add AFTER all existing chat.css rules.
+   ========================================================= */
+
+.chat-app {
+  position: relative !important;
+  width: 100% !important;
+  height: 100dvh !important;
+  min-height: 100vh !important;
+  overflow: hidden !important;
+}
+
+.chat-main {
+  width: 100% !important;
+  height: 100dvh !important;
+  min-height: 100vh !important;
+  margin-left: 0 !important;
+}
+
+/* ---------------- DRAWER ---------------- */
+.chat-sidebar {
+  position: fixed !important;
+  inset: 0 auto 0 0 !important;
+  width: 390px !important;
+  max-width: min(390px, 88vw) !important;
+  height: 100dvh !important;
+  min-height: 100vh !important;
+  z-index: 10000 !important;
+  transform: translateX(-105%) !important;
+  transition: transform 0.22s ease !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
+}
+
+.chat-sidebar.open {
+  transform: translateX(0) !important;
+  box-shadow: 14px 0 45px rgba(0, 0, 0, 0.28) !important;
+}
+
+.chat-sidebar .recent-section,
+.chat-sidebar .recent-list {
+  min-height: 0 !important;
+}
+
+.chat-sidebar .recent-list {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Drawer top row: X + brand */
+.sidebar-drawer-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  flex-shrink: 0 !important;
+}
+
+.sidebar-drawer-header .sidebar-brand {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.sidebar-close-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  padding: 0 !important;
+  border: 1px solid rgba(148, 163, 184, 0.28) !important;
+  border-radius: 11px !important;
+  background: transparent !important;
+  color: inherit !important;
+  cursor: pointer !important;
+}
+
+.sidebar-close-btn:hover {
+  background: rgba(127, 127, 127, 0.12) !important;
+}
+
+/* ---------------- BACKDROP ---------------- */
+.sidebar-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  z-index: 9990 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: rgba(15, 23, 42, 0.42) !important;
+  cursor: pointer !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ---------------- HAMBURGER ---------------- */
+.menu-toggle-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 46px !important;
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  padding: 0 !important;
+  border: 1px solid rgba(148, 163, 184, 0.28) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.76) !important;
+  color: #17324d !important;
+  cursor: pointer !important;
+  z-index: 2 !important;
+}
+
+.menu-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.96) !important;
+}
+
+.chat-app.dark .menu-toggle-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Keep drawer above everything, including topbar */
+.chat-sidebar,
+.chat-sidebar.open {
+  isolation: isolate !important;
+}
+
+/* ---------------- TABLET ---------------- */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .chat-sidebar {
+    width: 380px !important;
+    max-width: 78vw !important;
+  }
+}
+
+/* ---------------- MOBILE ---------------- */
+@media (max-width: 767px) {
+  .chat-sidebar {
+    width: min(360px, 88vw) !important;
+    max-width: 88vw !important;
+  }
+
+  .chat-topbar {
+    min-height: 64px !important;
+    padding: 9px 10px !important;
+    gap: 9px !important;
+  }
+
+  .menu-toggle-btn {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    flex-basis: 42px !important;
+  }
+
+  .mobile-brand {
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .topbar-right {
+    gap: 5px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .chat-sidebar {
+    width: 86vw !important;
+    max-width: 86vw !important;
+  }
+
+  .chat-topbar {
+    padding: 8px 8px !important;
+  }
+
+  .menu-toggle-btn {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    flex-basis: 40px !important;
+  }
+}

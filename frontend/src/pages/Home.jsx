@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import "../styles/home.css";
+
 import {
   FaSearch,
   FaBookMedical,
@@ -24,6 +25,10 @@ function Home() {
 
   const [level, setLevel] = useState("UG");
 
+  // =====================================================
+  // SEARCH
+  // =====================================================
+
   const handleSearch = (event) => {
     event.preventDefault();
 
@@ -39,6 +44,10 @@ function Home() {
       },
     });
   };
+
+  // =====================================================
+  // TOPIC SUGGESTIONS
+  // =====================================================
 
   const suggestions = [
     {
@@ -63,6 +72,10 @@ function Home() {
     },
   ];
 
+  // =====================================================
+  // OPEN TOPIC
+  // =====================================================
+
   const openTopic = (title) => {
     navigate("/chat", {
       state: {
@@ -73,12 +86,22 @@ function Home() {
     });
   };
 
+  // =====================================================
+  // UI
+  // =====================================================
+
   return (
     <div className={`home-page ${darkMode ? "dark" : "light"}`}>
-      
-      {/* NAVBAR */}
+
+      {/* =================================================
+          NAVBAR
+      ================================================= */}
+
       <nav className="home-navbar">
+
+        {/* BRAND */}
         <div className="home-logo">
+
           <div className="home-logo-icon">
             <FaBookMedical />
           </div>
@@ -87,9 +110,12 @@ function Home() {
             <h2>FMT@Fingertips</h2>
             <span>Forensic Medicine Assistant</span>
           </div>
+
         </div>
 
+        {/* NAVIGATION */}
         <div className="home-nav-links">
+
           {/* DARK MODE */}
           <button
             type="button"
@@ -122,17 +148,29 @@ function Home() {
             <FaUserCircle />
             <span>Profile</span>
           </button>
+
         </div>
+
       </nav>
+
+      {/* =================================================
+          MAIN CONTENT
+      ================================================= */}
 
       <main className="home-content">
 
-        {/* HERO */}
+        {/* =================================================
+            HERO
+        ================================================= */}
+
         <div className="home-hero">
+
+          {/* BADGE */}
           <div className="hero-badge">
             ✦ AI-Powered FMT Learning
           </div>
 
+          {/* MAIN TITLE */}
           <h1>
             Your Forensic Medicine
             <br />
@@ -141,32 +179,66 @@ function Home() {
             </span>
           </h1>
 
+          {/* CREATOR CREDIT */}
+          <div className="creator-credit">
+
+            <span className="credit-line"></span>
+
+            <span>
+              Created by{" "}
+              <strong>Dr. Kanchan Zine</strong>
+            </span>
+
+            <span className="credit-line"></span>
+
+          </div>
+
+          {/* HERO DESCRIPTION */}
           <p>
             Ask questions, revise concepts, and explore your FMT
             study material with an intelligent learning assistant.
           </p>
+
         </div>
 
-        {/* LEARNING LEVEL */}
+        {/* =================================================
+            LEARNING LEVEL
+        ================================================= */}
+
         <section className="learning-level-section">
+
           <div className="learning-level-heading">
+
             <div>
-              <h3>Choose your learning level</h3>
+
+              <h3>
+                Choose your learning level
+              </h3>
 
               <p>
                 Select the level that matches your current studies.
               </p>
+
             </div>
 
             <div className="selected-level-label">
+
               <span></span>
+
               {level} mode selected
+
             </div>
+
           </div>
+
+          {/* LEVEL CARDS */}
 
           <div className="level-cards">
 
-            {/* UG */}
+            {/* =================================================
+                UG
+            ================================================= */}
+
             <button
               type="button"
               className={`level-card ${
@@ -174,7 +246,9 @@ function Home() {
               }`}
               onClick={() => setLevel("UG")}
             >
+
               <div className="level-card-top">
+
                 <div className="level-icon ug-icon">
                   <FaBookMedical />
                 </div>
@@ -184,13 +258,16 @@ function Home() {
                     <FaCheck />
                   </div>
                 )}
+
               </div>
 
               <div className="level-small-title">
                 UNDERGRADUATE
               </div>
 
-              <h2>UG</h2>
+              <h2>
+                UG
+              </h2>
 
               <p>
                 Clear, exam-oriented explanations designed for
@@ -198,17 +275,31 @@ function Home() {
               </p>
 
               <div className="level-tags">
-                <span>MBBS</span>
-                <span>Exam Focused</span>
-                <span>Rapid Revision</span>
+
+                <span>
+                  MBBS
+                </span>
+
+                <span>
+                  Exam Focused
+                </span>
+
+                <span>
+                  Rapid Revision
+                </span>
+
               </div>
 
               <div className="level-arrow">
                 <FaArrowRight />
               </div>
+
             </button>
 
-            {/* PG */}
+            {/* =================================================
+                PG
+            ================================================= */}
+
             <button
               type="button"
               className={`level-card ${
@@ -216,7 +307,9 @@ function Home() {
               }`}
               onClick={() => setLevel("PG")}
             >
+
               <div className="level-card-top">
+
                 <div className="level-icon pg-icon">
                   <FaGraduationCap />
                 </div>
@@ -226,13 +319,16 @@ function Home() {
                     <FaCheck />
                   </div>
                 )}
+
               </div>
 
               <div className="level-small-title">
                 POSTGRADUATE
               </div>
 
-              <h2>PG</h2>
+              <h2>
+                PG
+              </h2>
 
               <p>
                 Advanced and detailed explanations for
@@ -240,24 +336,40 @@ function Home() {
               </p>
 
               <div className="level-tags">
-                <span>MD / MS</span>
-                <span>Advanced</span>
-                <span>In-depth</span>
+
+                <span>
+                  MD / MS
+                </span>
+
+                <span>
+                  Advanced
+                </span>
+
+                <span>
+                  In-depth
+                </span>
+
               </div>
 
               <div className="level-arrow">
                 <FaArrowRight />
               </div>
+
             </button>
 
           </div>
+
         </section>
 
-        {/* SEARCH */}
+        {/* =================================================
+            SEARCH
+        ================================================= */}
+
         <form
           className="home-search"
           onSubmit={handleSearch}
         >
+
           <FaSearch className="search-icon" />
 
           <input
@@ -269,59 +381,106 @@ function Home() {
           <button type="submit">
             <FaArrowRight />
           </button>
+
         </form>
 
-        {/* ANSWER MODE */}
+        {/* =================================================
+            ANSWER MODE
+        ================================================= */}
+
         <div className="answer-mode">
+
           <FaGraduationCap />
 
-          <span>Answer mode:</span>
+          <span>
+            Answer mode:
+          </span>
 
-          <strong>{level}</strong>
+          <strong>
+            {level}
+          </strong>
+
         </div>
 
-        {/* TOPICS */}
+        {/* =================================================
+            TOPICS
+        ================================================= */}
+
         <section className="suggestions-section">
+
           <div className="section-heading">
-            <h3>Explore FMT Topics</h3>
-            <span>Start with a topic</span>
+
+            <h3>
+              Explore FMT Topics
+            </h3>
+
+            <span>
+              Start with a topic
+            </span>
+
           </div>
 
           <div className="suggestion-grid">
+
             {suggestions.map((item) => (
+
               <button
                 type="button"
                 className="suggestion-card"
                 key={item.title}
                 onClick={() => openTopic(item.title)}
               >
+
                 <div className="suggestion-icon">
                   {item.icon}
                 </div>
 
                 <div className="suggestion-text">
-                  <h4>{item.title}</h4>
-                  <p>{item.text}</p>
+
+                  <h4>
+                    {item.title}
+                  </h4>
+
+                  <p>
+                    {item.text}
+                  </p>
+
                 </div>
 
-                <FaArrowRight className="suggestion-arrow" />
+                <FaArrowRight
+                  className="suggestion-arrow"
+                />
+
               </button>
+
             ))}
+
           </div>
+
         </section>
 
-        {/* FOOTER */}
-        <div className="home-footer">
-          <span>📚 Built for Medical Students</span>
+        {/* =================================================
+            FOOTER
+        ================================================= */}
 
-          <span>•</span>
+        <div className="home-footer">
+
+          <span>
+            📚 Built for Medical Students
+          </span>
+
+          <span>
+            •
+          </span>
 
           <span>
             Study smarter with FMT@Fingertips
           </span>
+
         </div>
 
       </main>
+
     </div>
   );
 }

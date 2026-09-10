@@ -362,3 +362,38 @@
   }
 
 }
+
+.creator-credit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 14px 0 18px;
+  color: #19324f;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.creator-credit strong {
+  color: #167c78;
+  font-weight: 700;
+}
+
+.credit-line {
+  width: 52px;
+  height: 1px;
+  background: #9db8bb;
+  opacity: 0.8;
+}
+
+@media (max-width: 600px) {
+  .creator-credit {
+    font-size: 15px;
+    gap: 10px;
+    margin: 10px 0 14px;
+  }
+
+  .credit-line {
+    width: 28px;
+  }
+}
