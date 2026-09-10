@@ -208,11 +208,13 @@ DEFAULT_AUTO_FIELD = (
 # ============================================================
 
 # Your React/Vite frontend normally runs on port 5173.
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://fmt-fingertips.vercel.app",
+]
 
-CORS_ALLOWED_ORIGINS = os.getenv(
-    "CORS_ALLOWED_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173"
-).split(",")
+CORS_ALLOW_CREDENTIALS = True
 
 
 # ============================================================
