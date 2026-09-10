@@ -54,7 +54,7 @@ START
     python manage.py runserver
 
 Frontend API:
-    POST http://127.0.0.1:8000/ask/
+    POST https://fmt-fingertips-backend.onrender.com/ask/
 
 Request:
     {

@@ -40,7 +40,7 @@ function Register() {
         .replace(/[^a-zA-Z0-9_]/g, "");
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/register/",
+        "https://fmt-fingertips-backend.onrender.com/register/",
         {
           full_name: fullName.trim(),
           username: username,

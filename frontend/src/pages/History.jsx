@@ -30,7 +30,7 @@ function History() {
     }
 
     axios
-      .get("http://127.0.0.1:8000/history/", {
+      .get("https://fmt-fingertips-backend.onrender.com/history/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -73,7 +73,7 @@ function History() {
     }
 
     try {
-      await axios.delete("http://127.0.0.1:8000/history/", {
+      await axios.delete("https://fmt-fingertips-backend.onrender.com/history/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

@@ -26,7 +26,7 @@ function Profile() {
     }
 
     axios
-      .get("http://127.0.0.1:8000/me/", {
+      .get("https://fmt-fingertips-backend.onrender.com/me/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

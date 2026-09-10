@@ -1,4 +1,4 @@
-
+import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
@@ -26,14 +26,15 @@ import {
   Trash2,
   Pencil,
   Search,
-  X,
 } from "lucide-react";
 
 import "../styles/chat.css";
 import "../styles/history.css";
 import "../styles/profile.css";
 
-const API_URL = "https://fmt-fingertips-backend.onrender.com/ask/stream/";
+const API_URL =
+  "https://fmt-fingertips-backend.onrender.com/ask/stream/";
+
 const CHAT_STORAGE_KEY = "fmt_recent_chats";
 
 export default function Chat() {
@@ -51,12 +52,12 @@ export default function Chat() {
   const [openChatMenu, setOpenChatMenu] = useState(null);
   const [studentMenuOpen, setStudentMenuOpen] = useState(false);
 
-  // "chat"  -> normal chat header + messages + input
-  // "history" -> full history browser in the main area
   const [view, setView] = useState("chat");
+
   const [historySearch, setHistorySearch] = useState("");
   const [historyItems, setHistoryItems] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+
   const [profileData, setProfileData] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
 
@@ -70,54 +71,62 @@ export default function Chat() {
 
   useEffect(() => {
     try {
-      const savedChats = localStorage.getItem(CHAT_STORAGE_KEY);
+      const savedChats =
+        localStorage.getItem(CHAT_STORAGE_KEY);
 
-      if (savedChats) {
-        const parsedChats = JSON.parse(savedChats);
+      if (!savedChats) return;
 
-        if (Array.isArray(parsedChats)) {
-          setRecentChats(parsedChats);
-        }
+      const parsedChats = JSON.parse(savedChats);
+
+      if (Array.isArray(parsedChats)) {
+        setRecentChats(parsedChats);
       }
     } catch (error) {
-      console.error("Could not load recent chats:", error);
+      console.error(
+        "Could not load recent chats:",
+        error
+      );
     }
   }, []);
 
   // =========================================================
-  // AUTO-SEND A QUESTION HANDED OFF FROM HOME
-  // (Home.jsx navigates here with navigate("/chat", { state:
-  // { question, level, fromHome: true } }) — pick that up once
-  // on mount, set the matching level, and send it immediately
-  // instead of leaving it sitting in the input box.)
+  // AUTO SEND QUESTION FROM HOME
   // =========================================================
 
   useEffect(() => {
-    const incomingQuestion = location.state?.question;
+    const incomingQuestion =
+      location.state?.question;
 
     if (!incomingQuestion) return;
 
-    if (hasHandledIncomingQuestion.current) return;
+    if (hasHandledIncomingQuestion.current) {
+      return;
+    }
+
     hasHandledIncomingQuestion.current = true;
 
-    const incomingLevel = location.state?.level;
+    const incomingLevel =
+      location.state?.level;
 
-    if (incomingLevel) {
+    if (incomingLevel === "UG" || incomingLevel === "PG") {
       setLevel(incomingLevel);
     }
 
-    sendQuestion(incomingQuestion, incomingLevel);
+    sendQuestion(
+      incomingQuestion,
+      incomingLevel
+    );
 
-    // Clear the navigation state so refreshing /chat or
-    // navigating back here later doesn't resend the same
-    // question again.
-    window.history.replaceState({}, document.title);
+    window.history.replaceState(
+      {},
+      document.title
+    );
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
   // =========================================================
-  // SCROLL TO LATEST MESSAGE
+  // AUTO SCROLL
   // =========================================================
 
   useEffect(() => {
@@ -128,7 +137,7 @@ export default function Chat() {
   }, [messages, loading]);
 
   // =========================================================
-  // AUTO RESIZE TEXTAREA
+  // TEXTAREA RESIZE
   // =========================================================
 
   useEffect(() => {
@@ -149,23 +158,58 @@ export default function Chat() {
   const formatTime = (time) => {
     if (!time) return "";
 
-    return new Date(time).toLocaleTimeString(
-      [],
-      {
-        hour: "numeric",
-        minute: "2-digit",
-      }
-    );
+    try {
+      return new Date(time).toLocaleTimeString(
+        [],
+        {
+          hour: "numeric",
+          minute: "2-digit",
+        }
+      );
+    } catch {
+      return "";
+    }
   };
 
   // =========================================================
-  // FETCH SERVER HISTORY WHEN THE HISTORY VIEW OPENS
+  // CLEAN ANSWER DISPLAY
+  // =========================================================
+  //
+  // Defensive cleanup for accidental raw "svg" artifacts.
+  // This does NOT change normal medical answer content.
+  // =========================================================
+
+  const cleanAssistantContent = (content) => {
+    if (content === null || content === undefined) {
+      return "";
+    }
+
+    let text = String(content);
+
+    // Remove a standalone svg artifact at the very beginning.
+    text = text.replace(
+      /^\s*svg\s*/i,
+      ""
+    );
+
+    // Remove an accidental raw closing SVG marker.
+    text = text.replace(
+      /^\s*\/svg\s*/i,
+      ""
+    );
+
+    return text.trim();
+  };
+
+  // =========================================================
+  // HISTORY
   // =========================================================
 
   useEffect(() => {
     if (view !== "history") return;
 
-    const token = localStorage.getItem("access");
+    const token =
+      localStorage.getItem("access");
 
     if (!token) {
       window.location.href = "/login";
@@ -175,19 +219,32 @@ export default function Chat() {
     setHistoryLoading(true);
 
     axios
-      .get("https://fmt-fingertips-backend.onrender.com/history/", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      .get(
+        "https://fmt-fingertips-backend.onrender.com/history/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       .then((response) => {
-        setHistoryItems(response.data);
+        setHistoryItems(
+          Array.isArray(response.data)
+            ? response.data
+            : []
+        );
       })
       .catch((error) => {
-        console.error("History error:", error);
+        console.error(
+          "History error:",
+          error
+        );
 
-        if (error.response?.status === 401) {
+        if (
+          error.response?.status === 401
+        ) {
           localStorage.removeItem("access");
+          localStorage.removeItem("refresh");
           window.location.href = "/login";
         }
       })
@@ -197,13 +254,14 @@ export default function Chat() {
   }, [view]);
 
   // =========================================================
-  // FETCH PROFILE WHEN THE PROFILE VIEW OPENS
+  // PROFILE
   // =========================================================
 
   useEffect(() => {
     if (view !== "profile") return;
 
-    const token = localStorage.getItem("access");
+    const token =
+      localStorage.getItem("access");
 
     if (!token) {
       window.location.href = "/login";
@@ -213,19 +271,28 @@ export default function Chat() {
     setProfileLoading(true);
 
     axios
-      .get("https://fmt-fingertips-backend.onrender.com/me/", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      .get(
+        "https://fmt-fingertips-backend.onrender.com/me/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       .then((response) => {
         setProfileData(response.data);
       })
       .catch((error) => {
-        console.error("Profile error:", error);
+        console.error(
+          "Profile error:",
+          error
+        );
 
-        if (error.response?.status === 401) {
+        if (
+          error.response?.status === 401
+        ) {
           localStorage.removeItem("access");
+          localStorage.removeItem("refresh");
           window.location.href = "/login";
         }
       })
@@ -235,48 +302,69 @@ export default function Chat() {
   }, [view]);
 
   // =========================================================
-  // FORMAT HISTORY DATE ("Today" / "Yesterday" / "27 Aug")
+  // HISTORY DATE
   // =========================================================
 
-  const formatHistoryDate = (dateString) => {
+  const formatHistoryDate = (
+    dateString
+  ) => {
     if (!dateString) return "";
 
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
+    try {
+      const date = new Date(dateString);
 
-    if (date.toDateString() === today.toDateString()) {
-      return "Today";
+      const today = new Date();
+
+      const yesterday = new Date();
+      yesterday.setDate(
+        today.getDate() - 1
+      );
+
+      if (
+        date.toDateString() ===
+        today.toDateString()
+      ) {
+        return "Today";
+      }
+
+      if (
+        date.toDateString() ===
+        yesterday.toDateString()
+      ) {
+        return "Yesterday";
+      }
+
+      return date.toLocaleDateString(
+        "en-IN",
+        {
+          day: "2-digit",
+          month: "short",
+        }
+      );
+    } catch {
+      return "";
     }
-
-    if (date.toDateString() === yesterday.toDateString()) {
-      return "Yesterday";
-    }
-
-    return date.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-    });
   };
 
+  const filteredHistory =
+    historyItems.filter(
+      (item) =>
+        String(item.question || "")
+          .toLowerCase()
+          .includes(
+            historySearch.toLowerCase()
+          )
+    );
+
   // =========================================================
-  // FILTERED HISTORY (client-side search)
+  // OPEN HISTORY ITEM
   // =========================================================
 
-  const filteredHistory = historyItems.filter((item) =>
-    item.question
-      .toLowerCase()
-      .includes(historySearch.toLowerCase())
-  );
-
-  // =========================================================
-  // OPEN A HISTORY QUESTION BACK INTO THE CHAT
-  // =========================================================
-
-  const handleOpenHistoryItem = (question) => {
+  const handleOpenHistoryItem = (
+    historyQuestion
+  ) => {
     setView("chat");
-    setQuestion(question);
+    setQuestion(historyQuestion);
 
     setTimeout(() => {
       textareaRef.current?.focus();
@@ -284,47 +372,58 @@ export default function Chat() {
   };
 
   // =========================================================
-  // CLEAR ALL SERVER HISTORY
+  // CLEAR SERVER HISTORY
   // =========================================================
 
   const handleClearHistory = async () => {
-    const token = localStorage.getItem("access");
+    const token =
+      localStorage.getItem("access");
 
     if (!token) {
       window.location.href = "/login";
       return;
     }
 
-    const confirmed = window.confirm(
-      "Are you sure you want to clear your entire search history?"
-    );
+    const confirmed =
+      window.confirm(
+        "Are you sure you want to clear your entire search history?"
+      );
 
     if (!confirmed) return;
 
     try {
-      await axios.delete("https://fmt-fingertips-backend.onrender.com/history/", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await axios.delete(
+        "https://fmt-fingertips-backend.onrender.com/history/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       setHistoryItems([]);
     } catch (error) {
-      console.error("Clear history error:", error);
+      console.error(
+        "Clear history error:",
+        error
+      );
 
-      if (error.response?.status === 401) {
+      if (
+        error.response?.status === 401
+      ) {
         localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
         window.location.href = "/login";
       } else {
-        alert("Unable to clear history.");
+        alert(
+          "Unable to clear history."
+        );
       }
     }
   };
 
   // =========================================================
-  // PERSIST CHATS TO LOCALSTORAGE
-  // (pure side-effect helper only — never derives the next
-  //  state, so it can never read stale data)
+  // LOCAL CHAT STORAGE
   // =========================================================
 
   const persistChats = (chats) => {
@@ -334,18 +433,15 @@ export default function Chat() {
         JSON.stringify(chats)
       );
     } catch (error) {
-      console.error("Could not save chats:", error);
+      console.error(
+        "Could not save chats:",
+        error
+      );
     }
   };
 
   // =========================================================
   // CREATE CHAT
-  // =========================================================
-  //
-  // FIX: uses the functional form of setRecentChats so the
-  // "prepend new chat" step always operates on the freshest
-  // state, instead of the `recentChats` value captured when
-  // sendQuestion started running.
   // =========================================================
 
   const createChat = (
@@ -353,92 +449,108 @@ export default function Chat() {
     chatMessages,
     chatLevel = level
   ) => {
+    const now =
+      new Date().toISOString();
+
     const newChat = {
       id: Date.now(),
       title: firstQuestion,
       time: "Just now",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
       level: chatLevel,
       messages: chatMessages,
     };
 
-    setRecentChats((prevChats) => {
-      const updatedChats = [
+    setRecentChats((previous) => {
+      const updated = [
         newChat,
-        ...prevChats,
+        ...previous,
       ].slice(0, 20);
 
-      persistChats(updatedChats);
+      persistChats(updated);
 
-      return updatedChats;
+      return updated;
     });
 
     return newChat;
   };
 
   // =========================================================
-  // UPDATE EXISTING CHAT
-  // =========================================================
-  //
-  // FIX: same functional-update fix as createChat. This is
-  // the call that was previously wiping out a just-created
-  // chat once the assistant's response arrived, because it
-  // was mapping over a stale `recentChats` snapshot that
-  // didn't include the chat createChat had just added.
+  // UPDATE CHAT
   // =========================================================
 
   const updateChat = (
     chatId,
     updatedMessages
   ) => {
-    setRecentChats((prevChats) => {
-      const updatedChats = prevChats.map(
-        (chat) => {
-          if (chat.id === chatId) {
-            return {
-              ...chat,
-              messages: updatedMessages,
-              updatedAt:
-                new Date().toISOString(),
-              time: "Just now",
-            };
+    setRecentChats((previous) => {
+      const updated =
+        previous.map((chat) => {
+          if (chat.id !== chatId) {
+            return chat;
           }
 
-          return chat;
-        }
-      );
+          return {
+            ...chat,
+            messages: updatedMessages,
+            updatedAt:
+              new Date().toISOString(),
+            time: "Just now",
+          };
+        });
 
-      persistChats(updatedChats);
+      persistChats(updated);
 
-      return updatedChats;
+      return updated;
     });
   };
 
   // =========================================================
-  // SEND QUESTION - STREAMING
+  // SEND QUESTION
   // =========================================================
 
   const sendQuestion = async (
     overrideText,
     overrideLevel
   ) => {
-    const trimmedQuestion = (
-      overrideText ?? question
-    ).trim();
+    const rawText =
+      overrideText ??
+      question ??
+      "";
+
+    const trimmedQuestion =
+      String(rawText).trim();
 
     const effectiveLevel =
-      overrideLevel ?? level;
+      overrideLevel === "UG" ||
+      overrideLevel === "PG"
+        ? overrideLevel
+        : level;
 
-    if (!trimmedQuestion || loading) {
+    if (
+      !trimmedQuestion ||
+      loading
+    ) {
       return;
     }
+
+    const token =
+      localStorage.getItem("access");
+
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
+
+    const now =
+      new Date().toISOString();
 
     const userMessage = {
       id: Date.now(),
       role: "user",
       content: trimmedQuestion,
-      time: new Date().toISOString(),
+      time: now,
     };
 
     const messagesWithUser = [
@@ -446,21 +558,30 @@ export default function Chat() {
       userMessage,
     ];
 
-    setMessages(messagesWithUser);
+    setMessages(
+      messagesWithUser
+    );
+
     setQuestion("");
     setLoading(true);
 
-    let currentChatId = activeChatId;
+    let currentChatId =
+      activeChatId;
 
     if (!currentChatId) {
-      const newChat = createChat(
-        trimmedQuestion,
-        messagesWithUser,
-        effectiveLevel
-      );
+      const newChat =
+        createChat(
+          trimmedQuestion,
+          messagesWithUser,
+          effectiveLevel
+        );
 
-      currentChatId = newChat.id;
-      setActiveChatId(newChat.id);
+      currentChatId =
+        newChat.id;
+
+      setActiveChatId(
+        newChat.id
+      );
     } else {
       updateChat(
         currentChatId,
@@ -469,33 +590,42 @@ export default function Chat() {
     }
 
     try {
-      const token = localStorage.getItem("access");
+      const response =
+        await fetch(
+          API_URL,
+          {
+            method: "POST",
 
-      if (!token) {
-        throw new Error(
-          "No login token found. Please log in again."
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+              question:
+                trimmedQuestion,
+              level:
+                effectiveLevel,
+            }),
+          }
         );
-      }
 
-      const response = await fetch(
-        API_URL,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            question: trimmedQuestion,
-            level: effectiveLevel,
-          }),
-        }
-      );
+      if (
+        response.status === 401
+      ) {
+        localStorage.removeItem(
+          "access"
+        );
+        localStorage.removeItem(
+          "refresh"
+        );
 
-      if (response.status === 401) {
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        window.location.href = "/login";
+        window.location.href =
+          "/login";
+
         return;
       }
 
@@ -504,185 +634,401 @@ export default function Chat() {
           "Unable to get answer from server.";
 
         try {
-          const errorData = await response.json();
+          const errorData =
+            await response.json();
+
           errorMessage =
-            errorData.detail ||
             errorData.error ||
+            errorData.detail ||
             errorData.message ||
             errorMessage;
         } catch {
-          // Keep default error message
+          // Keep default.
         }
 
-        throw new Error(errorMessage);
-      }
-
-      if (!response.body) {
         throw new Error(
-          "Streaming is not supported by this browser."
+          errorMessage
         );
       }
 
-      const assistantId = Date.now() + 1;
-      let fullAnswer = "";
-      let sources = [];
+      // =====================================================
+      // STREAMING RESPONSE
+      // =====================================================
 
-      const initialAssistantMessage = {
-        id: assistantId,
-        role: "assistant",
-        content: "",
-        sources: [],
-        time: new Date().toISOString(),
-      };
+      if (
+        !response.body
+      ) {
+        throw new Error(
+          "The server did not return a readable response."
+        );
+      }
 
-      setMessages([
-        ...messagesWithUser,
-        initialAssistantMessage,
+      const reader =
+        response.body.getReader();
+
+      const decoder =
+        new TextDecoder();
+
+      let buffer = "";
+      let finalAnswer = "";
+      let finalSources = [];
+      let finalModel = null;
+      let finalTiming = null;
+      let assistantMessageId =
+        Date.now() + 1;
+
+      // Create an empty assistant message
+      // immediately so the answer can stream.
+      setMessages((previous) => [
+        ...previous,
+        {
+          id: assistantMessageId,
+          role: "assistant",
+          content: "",
+          sources: [],
+          time:
+            new Date().toISOString(),
+        },
       ]);
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let buffer = "";
-      let streamCompleted = false;
+      let streamFinished =
+        false;
 
-      const handleEvent = (event) => {
-        if (!event || !event.type) return;
+      while (!streamFinished) {
+        const {
+          value,
+          done,
+        } =
+          await reader.read();
 
-        if (event.type === "meta") {
-          sources = event.sources || [];
-
-          setMessages((previousMessages) =>
-            previousMessages.map((message) =>
-              message.id === assistantId
-                ? { ...message, sources }
-                : message
-            )
-          );
+        if (done) {
+          streamFinished = true;
+          break;
         }
 
-        else if (event.type === "delta") {
-          const delta = event.text || "";
-          if (!delta) return;
+        buffer += decoder.decode(
+          value,
+          {
+            stream: true,
+          }
+        );
 
-          fullAnswer += delta;
+        const lines =
+          buffer.split("\n");
 
-          setMessages((previousMessages) =>
-            previousMessages.map((message) =>
-              message.id === assistantId
-                ? {
-                    ...message,
-                    content: fullAnswer,
-                    sources,
-                  }
-                : message
-            )
-          );
-        }
+        buffer =
+          lines.pop() || "";
 
-        else if (event.type === "done") {
-          fullAnswer = event.answer || fullAnswer;
-          sources = event.sources || sources;
-          streamCompleted = true;
+        for (
+          const line of lines
+        ) {
+          const trimmedLine =
+            line.trim();
 
-          setMessages((previousMessages) =>
-            previousMessages.map((message) =>
-              message.id === assistantId
-                ? {
-                    ...message,
-                    content: fullAnswer || "No answer was returned.",
-                    sources,
-                  }
-                : message
-            )
-          );
-        }
+          if (!trimmedLine) {
+            continue;
+          }
 
-        else if (event.type === "error") {
-          throw new Error(
-            event.error ||
-              "Something went wrong while generating the answer."
-          );
-        }
-      };
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          const trimmedLine = line.trim();
-          if (!trimmedLine) continue;
+          let event;
 
           try {
-            handleEvent(JSON.parse(trimmedLine));
-          } catch (parseError) {
-            if (parseError instanceof Error && parseError.message.includes("AI generation")) {
-              throw parseError;
+            event =
+              JSON.parse(
+                trimmedLine
+              );
+          } catch {
+            // Ignore incomplete/non-JSON
+            // lines rather than breaking
+            // the entire answer.
+            continue;
+          }
+
+          // -----------------------------------------------
+          // TOKEN / TEXT
+          // -----------------------------------------------
+
+          if (
+            event.type === "token" ||
+            event.type === "text" ||
+            event.type ===
+              "content"
+          ) {
+            const tokenText =
+              String(
+                event.text ??
+                  event.content ??
+                  event.token ??
+                  ""
+              );
+
+            finalAnswer +=
+              tokenText;
+
+            const cleaned =
+              cleanAssistantContent(
+                finalAnswer
+              );
+
+            setMessages(
+              (previous) =>
+                previous.map(
+                  (message) =>
+                    message.id ===
+                    assistantMessageId
+                      ? {
+                          ...message,
+                          content:
+                            cleaned,
+                        }
+                      : message
+                )
+            );
+          }
+
+          // -----------------------------------------------
+          // COMPLETE ANSWER
+          // -----------------------------------------------
+
+          if (
+            event.type ===
+              "answer" ||
+            event.type ===
+              "complete" ||
+            event.type ===
+              "done"
+          ) {
+            const answer =
+              event.answer ??
+              event.content ??
+              event.text ??
+              "";
+
+            if (answer) {
+              finalAnswer =
+                String(answer);
             }
-            console.warn("Could not parse stream event:", trimmedLine, parseError);
+
+            if (
+              Array.isArray(
+                event.sources
+              )
+            ) {
+              finalSources =
+                event.sources;
+            }
+
+            if (event.model) {
+              finalModel =
+                event.model;
+            }
+
+            if (event.timing) {
+              finalTiming =
+                event.timing;
+            }
+
+            if (
+              event.done === true ||
+              event.type ===
+                "done"
+            ) {
+              streamFinished = true;
+            }
+          }
+
+          // -----------------------------------------------
+          // SOURCES
+          // -----------------------------------------------
+
+          if (
+            Array.isArray(
+              event.sources
+            )
+          ) {
+            finalSources =
+              event.sources;
+
+            setMessages(
+              (previous) =>
+                previous.map(
+                  (message) =>
+                    message.id ===
+                    assistantMessageId
+                      ? {
+                          ...message,
+                          sources:
+                            finalSources,
+                        }
+                      : message
+                )
+            );
+          }
+
+          // -----------------------------------------------
+          // MODEL / TIMING
+          // -----------------------------------------------
+
+          if (event.model) {
+            finalModel =
+              event.model;
+          }
+
+          if (event.timing) {
+            finalTiming =
+              event.timing;
+          }
+
+          // -----------------------------------------------
+          // ERROR EVENT
+          // -----------------------------------------------
+
+          if (
+            event.error
+          ) {
+            throw new Error(
+              String(
+                event.error
+              )
+            );
           }
         }
       }
 
+      // Flush decoder.
       buffer += decoder.decode();
 
       if (buffer.trim()) {
-        const finalLines = buffer
-          .split("\n")
-          .map((line) => line.trim())
-          .filter(Boolean);
+        try {
+          const event =
+            JSON.parse(
+              buffer.trim()
+            );
 
-        for (const line of finalLines) {
-          try {
-            handleEvent(JSON.parse(line));
-          } catch (parseError) {
-            console.warn("Could not parse final stream event:", line, parseError);
+          if (
+            event.answer
+          ) {
+            finalAnswer =
+              String(
+                event.answer
+              );
+          }
+
+          if (
+            Array.isArray(
+              event.sources
+            )
+          ) {
+            finalSources =
+              event.sources;
+          }
+
+          if (event.model) {
+            finalModel =
+              event.model;
+          }
+
+          if (event.timing) {
+            finalTiming =
+              event.timing;
+          }
+
+          if (event.error) {
+            throw new Error(
+              String(
+                event.error
+              )
+            );
+          }
+        } catch (error) {
+          // Ignore malformed trailing data
+          // unless it is an explicit Error.
+          if (
+            error instanceof Error &&
+            error.message &&
+            !String(
+              error.message
+            ).includes(
+              "Unexpected"
+            )
+          ) {
+            throw error;
           }
         }
       }
 
+      const cleanedAnswer =
+        cleanAssistantContent(
+          finalAnswer ||
+            "No answer was returned."
+        );
+
+      const finalAssistantMessage =
+        {
+          id: assistantMessageId,
+          role: "assistant",
+          content:
+            cleanedAnswer,
+          sources:
+            finalSources,
+          model:
+            finalModel,
+          timing:
+            finalTiming,
+          time:
+            new Date().toISOString(),
+        };
+
       const finalMessages = [
         ...messagesWithUser,
-        {
-          id: assistantId,
-          role: "assistant",
-          content: fullAnswer || "No answer was returned.",
-          sources,
-          time: new Date().toISOString(),
-        },
+        finalAssistantMessage,
       ];
 
-      setMessages(finalMessages);
-      updateChat(currentChatId, finalMessages);
+      setMessages(
+        finalMessages
+      );
 
-      if (!streamCompleted) {
-        console.warn("Streaming connection ended without a done event.");
-      }
-
+      updateChat(
+        currentChatId,
+        finalMessages
+      );
     } catch (error) {
-      console.error("STREAM ASK ERROR:", error);
+      console.error(
+        "ASK ERROR:",
+        error
+      );
 
-      const errorMessage = {
-        id: Date.now() + 2,
-        role: "assistant",
-        error: true,
-        content:
-          error?.message ||
-          "Something went wrong while generating the answer.",
-        time: new Date().toISOString(),
-      };
+      const errorMessage =
+        {
+          id:
+            Date.now() + 2,
+
+          role:
+            "assistant",
+
+          error:
+            true,
+
+          content:
+            error.message ||
+            "Something went wrong while generating the answer.",
+
+          time:
+            new Date().toISOString(),
+        };
 
       const finalMessages = [
         ...messagesWithUser,
         errorMessage,
       ];
 
-      setMessages(finalMessages);
-      updateChat(currentChatId, finalMessages);
+      setMessages(
+        finalMessages
+      );
+
+      updateChat(
+        currentChatId,
+        finalMessages
+      );
     } finally {
       setLoading(false);
     }
@@ -692,7 +1038,9 @@ export default function Chat() {
   // ENTER TO SEND
   // =========================================================
 
-  const handleKeyDown = (event) => {
+  const handleKeyDown = (
+    event
+  ) => {
     if (
       event.key === "Enter" &&
       !event.shiftKey
@@ -723,23 +1071,38 @@ export default function Chat() {
   // OPEN CHAT
   // =========================================================
 
-  const openChat = (chat) => {
+  const openChat = (
+    chat
+  ) => {
     if (loading) return;
 
-    setMessages(chat.messages || []);
-    setActiveChatId(chat.id);
+    setMessages(
+      chat.messages || []
+    );
 
-    if (chat.level) {
-      setLevel(chat.level);
+    setActiveChatId(
+      chat.id
+    );
+
+    if (
+      chat.level === "UG" ||
+      chat.level === "PG"
+    ) {
+      setLevel(
+        chat.level
+      );
     }
 
     setOpenChatMenu(null);
     setView("chat");
 
     setTimeout(() => {
-      chatEndRef.current?.scrollIntoView({
-        behavior: "smooth",
-      });
+      chatEndRef.current?.scrollIntoView(
+        {
+          behavior:
+            "smooth",
+        }
+      );
     }, 100);
   };
 
@@ -747,31 +1110,49 @@ export default function Chat() {
   // RENAME CHAT
   // =========================================================
 
-  const renameChat = (event, chat) => {
+  const renameChat = (
+    event,
+    chat
+  ) => {
     event.stopPropagation();
 
-    const newTitle = window.prompt(
-      "Rename chat",
-      chat.title
-    );
+    const newTitle =
+      window.prompt(
+        "Rename chat",
+        chat.title
+      );
 
     setOpenChatMenu(null);
 
-    if (!newTitle || !newTitle.trim()) {
+    if (
+      !newTitle ||
+      !newTitle.trim()
+    ) {
       return;
     }
 
-    setRecentChats((prevChats) => {
-      const updatedChats = prevChats.map((c) =>
-        c.id === chat.id
-          ? { ...c, title: newTitle.trim() }
-          : c
-      );
+    setRecentChats(
+      (previous) => {
+        const updated =
+          previous.map(
+            (item) =>
+              item.id ===
+              chat.id
+                ? {
+                    ...item,
+                    title:
+                      newTitle.trim(),
+                  }
+                : item
+          );
 
-      persistChats(updatedChats);
+        persistChats(
+          updated
+        );
 
-      return updatedChats;
-    });
+        return updated;
+      }
+    );
   };
 
   // =========================================================
@@ -784,19 +1165,29 @@ export default function Chat() {
   ) => {
     event.stopPropagation();
 
-    setRecentChats((prevChats) => {
-      const updatedChats = prevChats.filter(
-        (chat) => chat.id !== chatId
-      );
+    setRecentChats(
+      (previous) => {
+        const updated =
+          previous.filter(
+            (chat) =>
+              chat.id !==
+              chatId
+          );
 
-      persistChats(updatedChats);
+        persistChats(
+          updated
+        );
 
-      return updatedChats;
-    });
+        return updated;
+      }
+    );
 
     setOpenChatMenu(null);
 
-    if (activeChatId === chatId) {
+    if (
+      activeChatId ===
+      chatId
+    ) {
       setMessages([]);
       setActiveChatId(null);
       setQuestion("");
@@ -804,15 +1195,13 @@ export default function Chat() {
   };
 
   // =========================================================
-  // CLEAR ALL CHATS
+  // CLEAR LOCAL CHATS
   // =========================================================
 
   const clearAllChats = () => {
-    setRecentChats(() => {
-      persistChats([]);
-      return [];
-    });
+    persistChats([]);
 
+    setRecentChats([]);
     setMessages([]);
     setActiveChatId(null);
     setQuestion("");
@@ -820,30 +1209,28 @@ export default function Chat() {
   };
 
   // =========================================================
-  // SWITCH LEVEL
+  // SWITCH UG / PG
   // =========================================================
 
   const switchLevel = () => {
-    setLevel((currentLevel) =>
-      currentLevel === "UG"
-        ? "PG"
-        : "UG"
+    setLevel(
+      (current) =>
+        current === "UG"
+          ? "PG"
+          : "UG"
     );
   };
 
   // =========================================================
-  // TOGGLE STUDENT MENU
+  // STUDENT MENU
   // =========================================================
 
   const toggleStudentMenu = () => {
     setStudentMenuOpen(
-      !studentMenuOpen
+      (previous) =>
+        !previous
     );
   };
-
-  // =========================================================
-  // PROFILE
-  // =========================================================
 
   const handleProfile = () => {
     setStudentMenuOpen(false);
@@ -855,10 +1242,16 @@ export default function Chat() {
   // =========================================================
 
   const handleLogout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
+    localStorage.removeItem(
+      "access"
+    );
 
-    window.location.href = "/login";
+    localStorage.removeItem(
+      "refresh"
+    );
+
+    window.location.href =
+      "/login";
   };
 
   // =========================================================
@@ -873,7 +1266,6 @@ export default function Chat() {
           : "chat-app"
       }
     >
-
       {/* ================================================= */}
       {/* SIDEBAR */}
       {/* ================================================= */}
@@ -883,13 +1275,11 @@ export default function Chat() {
         {/* BRAND */}
 
         <div className="sidebar-brand">
-
           <div className="brand-icon">
             <FileText size={21} />
           </div>
 
           <div>
-
             <h1>
               FMT@Fingertips
             </h1>
@@ -897,27 +1287,23 @@ export default function Chat() {
             <span>
               Forensic Medicine Assistant
             </span>
-
           </div>
-
         </div>
-
 
         {/* NEW CHAT */}
 
         <button
           className="new-chat-btn"
-          onClick={handleNewChat}
+          onClick={
+            handleNewChat
+          }
         >
-
           <Plus size={19} />
 
           <span>
             New Chat
           </span>
-
         </button>
-
 
         {/* NAVIGATION */}
 
@@ -940,7 +1326,6 @@ export default function Chat() {
             </span>
           </button>
 
-
           <button
             className={
               view === "profile"
@@ -958,8 +1343,9 @@ export default function Chat() {
             </span>
           </button>
 
-
-          <button>
+          <button
+            type="button"
+          >
             <Settings size={19} />
 
             <span>
@@ -969,35 +1355,31 @@ export default function Chat() {
 
         </nav>
 
-
         {/* RECENT CHATS */}
 
         <div className="recent-section">
 
           <div className="recent-header">
-
             <span>
               Recent Chats
             </span>
 
-
-            {recentChats.length > 0 && (
-
+            {recentChats.length >
+              0 && (
               <button
-                onClick={clearAllChats}
+                onClick={
+                  clearAllChats
+                }
               >
                 Clear all
               </button>
-
             )}
-
           </div>
-
 
           <div className="recent-list">
 
-            {recentChats.length === 0 ? (
-
+            {recentChats.length ===
+            0 ? (
               <div className="empty-history">
 
                 <MessageSquare
@@ -1009,47 +1391,49 @@ export default function Chat() {
                 </p>
 
               </div>
-
             ) : (
-
               recentChats.map(
                 (chat) => (
-
                   <div
-                    key={chat.id}
+                    key={
+                      chat.id
+                    }
                     className={
-                      activeChatId === chat.id
+                      activeChatId ===
+                      chat.id
                         ? "recent-chat active"
                         : "recent-chat"
                     }
                   >
 
-                    {/* CHAT OPEN BUTTON */}
-
                     <button
                       className="recent-chat-main"
-                      title={chat.title}
+                      title={
+                        chat.title
+                      }
                       onClick={() =>
-                        openChat(chat)
+                        openChat(
+                          chat
+                        )
                       }
                     >
-
                       <span className="recent-chat-title">
-                        {chat.title}
+                        {
+                          chat.title
+                        }
                       </span>
-
                     </button>
-
-
-                    {/* THREE DOT BUTTON */}
 
                     <button
                       className={
-                        openChatMenu === chat.id
+                        openChatMenu ===
+                        chat.id
                           ? "chat-options-btn menu-open"
                           : "chat-options-btn"
                       }
-                      onClick={(event) => {
+                      onClick={(
+                        event
+                      ) => {
                         event.stopPropagation();
 
                         setOpenChatMenu(
@@ -1060,32 +1444,25 @@ export default function Chat() {
                         );
                       }}
                     >
-
                       <MoreVertical
                         size={18}
                       />
-
                     </button>
-
-
-                    {/* CHAT OPTIONS MENU */}
 
                     {openChatMenu ===
                       chat.id && (
-
-                      <div
-                        className="chat-options-menu"
-                      >
+                      <div className="chat-options-menu">
 
                         <button
-                          onClick={(event) =>
+                          onClick={(
+                            event
+                          ) =>
                             renameChat(
                               event,
                               chat
                             )
                           }
                         >
-
                           <Pencil
                             size={16}
                           />
@@ -1093,20 +1470,19 @@ export default function Chat() {
                           <span>
                             Rename
                           </span>
-
                         </button>
-
 
                         <button
                           className="delete-option"
-                          onClick={(event) =>
+                          onClick={(
+                            event
+                          ) =>
                             deleteChat(
                               event,
                               chat.id
                             )
                           }
                         >
-
                           <Trash2
                             size={16}
                           />
@@ -1114,37 +1490,28 @@ export default function Chat() {
                           <span>
                             Delete
                           </span>
-
                         </button>
 
                       </div>
-
                     )}
 
                   </div>
-
                 )
               )
-
             )}
 
           </div>
-
         </div>
-
 
         {/* MODE CARD */}
 
         <div className="mode-card">
 
           <div className="mode-card-icon">
-
             <GraduationCap
               size={25}
             />
-
           </div>
-
 
           <div className="mode-card-content">
 
@@ -1153,21 +1520,21 @@ export default function Chat() {
             </h3>
 
             <p>
-              {level === "UG"
+              {level ===
+              "UG"
                 ? "Simple and exam-focused explanations for undergraduate students."
                 : "Advanced and detailed explanations for postgraduate learning."}
             </p>
 
           </div>
 
-
           <button
             className="switch-mode-btn"
-            onClick={switchLevel}
+            onClick={
+              switchLevel
+            }
           >
-
             Switch to{" "}
-
             {level === "UG"
               ? "PG"
               : "UG"}
@@ -1175,27 +1542,21 @@ export default function Chat() {
             <span>
               →
             </span>
-
           </button>
 
         </div>
 
       </aside>
 
-
       {/* ================================================= */}
-      {/* MAIN AREA */}
+      {/* MAIN */}
       {/* ================================================= */}
 
       <main className="chat-main">
 
-
-        {/* ================================================= */}
         {/* TOP BAR */}
-        {/* ================================================= */}
 
         <header className="chat-topbar">
-
 
           <div className="mobile-brand">
 
@@ -1203,9 +1564,7 @@ export default function Chat() {
               <Bot size={20} />
             </div>
 
-
             <div>
-
               <strong>
                 FMT Assistant
               </strong>
@@ -1213,14 +1572,11 @@ export default function Chat() {
               <span>
                 {level} Learning
               </span>
-
             </div>
 
           </div>
 
-
           <div className="topbar-right">
-
 
             {/* DARK MODE */}
 
@@ -1228,7 +1584,8 @@ export default function Chat() {
               className="theme-toggle"
               onClick={() =>
                 setDarkMode(
-                  !darkMode
+                  (previous) =>
+                    !previous
                 )
               }
               title={
@@ -1245,17 +1602,19 @@ export default function Chat() {
                     : "theme-switch"
                 }
               >
-
                 <div className="theme-switch-knob">
 
                   {darkMode ? (
-                    <Sun size={15} />
+                    <Sun
+                      size={15}
+                    />
                   ) : (
-                    <Moon size={15} />
+                    <Moon
+                      size={15}
+                    />
                   )}
 
                 </div>
-
               </div>
 
               <span>
@@ -1266,14 +1625,15 @@ export default function Chat() {
 
             </button>
 
-
-            {/* STUDENT MENU */}
+            {/* STUDENT */}
 
             <div className="student-menu-wrapper">
 
               <button
                 className="student-menu"
-                onClick={toggleStudentMenu}
+                onClick={
+                  toggleStudentMenu
+                }
               >
 
                 <div className="student-avatar">
@@ -1295,39 +1655,39 @@ export default function Chat() {
 
               </button>
 
-
               {studentMenuOpen && (
-
                 <div className="student-dropdown">
 
                   <button
-                    onClick={handleProfile}
+                    onClick={
+                      handleProfile
+                    }
                   >
-
-                    <User size={17} />
+                    <User
+                      size={17}
+                    />
 
                     <span>
                       Profile
                     </span>
-
                   </button>
-
 
                   <button
                     className="logout-option"
-                    onClick={handleLogout}
+                    onClick={
+                      handleLogout
+                    }
                   >
-
-                    <LogOut size={17} />
+                    <LogOut
+                      size={17}
+                    />
 
                     <span>
                       Logout
                     </span>
-
                   </button>
 
                 </div>
-
               )}
 
             </div>
@@ -1336,457 +1696,463 @@ export default function Chat() {
 
         </header>
 
+        {/* ================================================= */}
+        {/* CHAT */}
+        {/* ================================================= */}
 
         {view === "chat" && (
-        <>
+          <>
 
-        {/* ================================================= */}
-        {/* CHAT HEADER */}
-        {/* ================================================= */}
+            {/* CHAT HEADER */}
 
-        <div className="chat-header">
+            <div className="chat-header">
 
-          <div className="assistant-avatar">
-            <Bot size={27} />
-          </div>
-
-
-          <div>
-
-            <div className="assistant-title-row">
-
-              <h2>
-                FMT Assistant
-              </h2>
-
-
-              <span className="level-badge">
-
-                <GraduationCap
-                  size={13}
+              <div className="assistant-avatar">
+                <Bot
+                  size={27}
                 />
+              </div>
 
-                {level}
+              <div>
 
-              </span>
-
-            </div>
-
-
-            <p>
-              {level === "UG"
-                ? "Undergraduate • Exam-oriented FMT learning"
-                : "Postgraduate • Advanced FMT learning"}
-            </p>
-
-          </div>
-
-        </div>
-
-
-        {/* ================================================= */}
-        {/* CHAT CONTENT */}
-        {/* ================================================= */}
-
-        <div className="chat-scroll-area">
-
-          <div className="chat-content">
-
-
-            {/* EMPTY STATE */}
-
-            {messages.length === 0 &&
-              !loading && (
-
-                <div className="welcome-state">
-
-                  <div className="welcome-icon">
-                    <Bot size={34} />
-                  </div>
-
+                <div className="assistant-title-row">
 
                   <h2>
-                    Ask your FMT question
+                    FMT Assistant
                   </h2>
 
+                  <span className="level-badge">
 
-                  <p>
-                    Get detailed,
-                    textbook-grounded answers
-                    for your forensic medicine
-                    studies.
-                  </p>
+                    <GraduationCap
+                      size={13}
+                    />
 
+                    {level}
 
-                  <div className="suggestion-grid">
-
-
-                    <button
-                      onClick={() =>
-                        setQuestion(
-                          "What is rigor mortis?"
-                        )
-                      }
-                    >
-                      What is rigor mortis?
-                    </button>
-
-
-                    <button
-                      onClick={() =>
-                        setQuestion(
-                          "Explain mechanical asphyxia."
-                        )
-                      }
-                    >
-                      Mechanical asphyxia
-                    </button>
-
-
-                    <button
-                      onClick={() =>
-                        setQuestion(
-                          "Explain postmortem changes."
-                        )
-                      }
-                    >
-                      Postmortem changes
-                    </button>
-
-
-                    <button
-                      onClick={() =>
-                        setQuestion(
-                          "Define abrasion."
-                        )
-                      }
-                    >
-                      Define abrasion
-                    </button>
-
-                  </div>
+                  </span>
 
                 </div>
 
-              )}
+                <p>
+                  {level ===
+                  "UG"
+                    ? "Undergraduate • Exam-oriented FMT learning"
+                    : "Postgraduate • Advanced FMT learning"}
+                </p>
 
+              </div>
 
-            {/* MESSAGES */}
+            </div>
 
-            {messages.map(
-              (message) => (
+            {/* CHAT CONTENT */}
 
-                <div
-                  key={message.id}
-                  className={
-                    message.role === "user"
-                      ? "message-row user-row"
-                      : "message-row assistant-row"
-                  }
-                >
+            <div className="chat-scroll-area">
 
+              <div className="chat-content">
 
-                  {/* ASSISTANT */}
+                {/* WELCOME */}
 
-                  {message.role ===
-                    "assistant" && (
+                {messages.length ===
+                  0 &&
+                  !loading && (
+                    <div className="welcome-state">
 
-                    <>
-
-                      <div className="message-assistant-icon">
-                        <Bot size={22} />
+                      <div className="welcome-icon">
+                        <Bot
+                          size={34}
+                        />
                       </div>
 
+                      <h2>
+                        Ask your FMT question
+                      </h2>
 
-                      <div className="assistant-message-wrap">
+                      <p>
+                        Get detailed,
+                        textbook-grounded answers
+                        for your forensic medicine
+                        studies.
+                      </p>
 
+                      <div className="suggestion-grid">
 
-                        <div className="message-meta">
-
-                          <span>
-                            FMT Assistant
-                          </span>
-
-                          <span>
-                            •
-                          </span>
-
-                          <span>
-                            {formatTime(
-                              message.time
-                            )}
-                          </span>
-
-                        </div>
-
-
-                        <div
-                          className={
-                            message.error
-                              ? "assistant-answer error-answer"
-                              : "assistant-answer"
+                        <button
+                          onClick={() =>
+                            setQuestion(
+                              "What is rigor mortis?"
+                            )
                           }
                         >
+                          What is rigor mortis?
+                        </button>
 
-                          <ReactMarkdown
-                            remarkPlugins={[
-                              remarkGfm,
-                            ]}
-                          >
-                            {message.content}
-                          </ReactMarkdown>
+                        <button
+                          onClick={() =>
+                            setQuestion(
+                              "Explain mechanical asphyxia."
+                            )
+                          }
+                        >
+                          Mechanical asphyxia
+                        </button>
 
-                        </div>
+                        <button
+                          onClick={() =>
+                            setQuestion(
+                              "Explain postmortem changes."
+                            )
+                          }
+                        >
+                          Postmortem changes
+                        </button>
 
+                        <button
+                          onClick={() =>
+                            setQuestion(
+                              "Define abrasion."
+                            )
+                          }
+                        >
+                          Define abrasion
+                        </button>
 
-                        {/* SOURCES */}
+                      </div>
 
-                        {message.sources &&
-                          message.sources.length >
-                            0 && (
+                    </div>
+                  )}
 
-                            <div className="answer-sources">
+                {/* MESSAGES */}
 
+                {messages.map(
+                  (message) => {
 
-                              <div className="sources-title">
+                    const isUser =
+                      message.role ===
+                      "user";
 
-                                <FileText
-                                  size={17}
-                                />
+                    return (
+                      <div
+                        key={
+                          message.id
+                        }
+                        className={
+                          isUser
+                            ? "message-row user-row"
+                            : "message-row assistant-row"
+                        }
+                      >
+
+                        {/* ASSISTANT */}
+
+                        {!isUser && (
+                          <>
+                            <div className="message-assistant-icon">
+                              <Bot
+                                size={22}
+                              />
+                            </div>
+
+                            <div className="assistant-message-wrap">
+
+                              <div className="message-meta">
 
                                 <span>
-                                  FMT Material Used
+                                  FMT Assistant
+                                </span>
+
+                                <span>
+                                  •
+                                </span>
+
+                                <span>
+                                  {formatTime(
+                                    message.time
+                                  )}
                                 </span>
 
                               </div>
 
+                              <div
+                                className={
+                                  message.error
+                                    ? "assistant-answer error-answer"
+                                    : "assistant-answer"
+                                }
+                              >
 
-                              <div className="sources-list">
-
-                                {message.sources.map(
-                                  (
-                                    source,
-                                    index
-                                  ) => (
-
-                                    <div
-                                      key={index}
-                                      className="source-item"
-                                    >
-
-                                      <strong>
-                                        {source.source}
-                                      </strong>
-
-                                      <span>
-                                        • Chunk{" "}
-                                        {source.chunk}
-                                      </span>
-
-                                    </div>
-
-                                  )
-                                )}
+                                <ReactMarkdown
+                                  remarkPlugins={[
+                                    remarkGfm,
+                                  ]}
+                                >
+                                  {cleanAssistantContent(
+                                    message.content
+                                  )}
+                                </ReactMarkdown>
 
                               </div>
 
+                              {/* SOURCES */}
+
+                              {Array.isArray(
+                                message.sources
+                              ) &&
+                                message.sources.length >
+                                  0 && (
+                                  <div className="answer-sources">
+
+                                    {/* IMPORTANT:
+                                        No FileText SVG here.
+                                        This prevents the stray
+                                        "svg" artifact. */}
+
+                                    <div className="sources-title">
+                                      <span>
+                                        FMT Material Used
+                                      </span>
+                                    </div>
+
+                                    <div className="sources-list">
+
+                                      {message.sources.map(
+                                        (
+                                          source,
+                                          index
+                                        ) => {
+
+                                          if (
+                                            typeof source ===
+                                            "string"
+                                          ) {
+                                            return (
+                                              <div
+                                                key={
+                                                  index
+                                                }
+                                                className="source-item"
+                                              >
+                                                {
+                                                  source
+                                                }
+                                              </div>
+                                            );
+                                          }
+
+                                          return (
+                                            <div
+                                              key={
+                                                index
+                                              }
+                                              className="source-item"
+                                            >
+                                              <strong>
+                                                {
+                                                  source?.source ||
+                                                  "FMT Material"
+                                                }
+                                              </strong>
+
+                                              {source?.chunk !==
+                                                undefined &&
+                                                source?.chunk !==
+                                                  null && (
+                                                  <span>
+                                                    {" "}
+                                                    • Chunk{" "}
+                                                    {
+                                                      source.chunk
+                                                    }
+                                                  </span>
+                                                )}
+                                            </div>
+                                          );
+                                        }
+                                      )}
+
+                                    </div>
+
+                                  </div>
+                                )}
+
+                            </div>
+                          </>
+                        )}
+
+                        {/* USER */}
+
+                        {isUser && (
+                          <div className="user-message-wrap">
+
+                            <div className="message-meta user-meta">
+
+                              <span>
+                                You
+                              </span>
+
+                              <span>
+                                •
+                              </span>
+
+                              <span>
+                                {formatTime(
+                                  message.time
+                                )}
+                              </span>
+
                             </div>
 
-                          )}
+                            <div className="user-message-content">
+                              {
+                                message.content
+                              }
+                            </div>
+
+                          </div>
+                        )}
 
                       </div>
+                    );
+                  }
+                )}
 
-                    </>
+                {/* LOADING */}
 
-                  )}
+                {loading && (
+                  <div className="message-row assistant-row">
 
+                    <div className="message-assistant-icon">
+                      <Bot
+                        size={22}
+                      />
+                    </div>
 
-                  {/* USER */}
+                    <div className="loading-answer">
 
-                  {message.role ===
-                    "user" && (
+                      <LoaderCircle
+                        size={22}
+                        className="spinner"
+                      />
 
-                    <div className="user-message-wrap">
+                      <div>
 
-
-                      <div className="message-meta user-meta">
+                        <strong>
+                          Searching FMT material
+                        </strong>
 
                         <span>
-                          You
+                          Generating your answer...
                         </span>
-
-                        <span>
-                          •
-                        </span>
-
-                        <span>
-                          {formatTime(
-                            message.time
-                          )}
-                        </span>
-
-                      </div>
-
-
-                      <div className="user-message-content">
-
-                        {message.content}
 
                       </div>
 
                     </div>
 
+                  </div>
+                )}
+
+                <div
+                  ref={
+                    chatEndRef
+                  }
+                />
+
+              </div>
+            </div>
+
+            {/* INPUT */}
+
+            <div className="chat-input-area">
+
+              <div className="chat-input-box">
+
+                <button
+                  className="attach-btn"
+                  type="button"
+                  title="File attachment coming soon"
+                >
+                  <Paperclip
+                    size={21}
+                  />
+                </button>
+
+                <textarea
+                  ref={
+                    textareaRef
+                  }
+                  value={
+                    question
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    setQuestion(
+                      event.target
+                        .value
+                    )
+                  }
+                  onKeyDown={
+                    handleKeyDown
+                  }
+                  placeholder={
+                    `Ask your ${level} FMT question...`
+                  }
+                  rows="1"
+                  disabled={
+                    loading
+                  }
+                />
+
+                <button
+                  className="send-btn"
+                  type="button"
+                  onClick={() =>
+                    sendQuestion()
+                  }
+                  disabled={
+                    loading ||
+                    !question.trim()
+                  }
+                >
+
+                  {loading ? (
+                    <LoaderCircle
+                      size={20}
+                      className="spinner"
+                    />
+                  ) : (
+                    <Send
+                      size={20}
+                    />
                   )}
 
-                </div>
-
-              )
-            )}
-
-
-            {/* LOADING */}
-
-            {loading && (
-
-              <div className="message-row assistant-row">
-
-
-                <div className="message-assistant-icon">
-
-                  <Bot size={22} />
-
-                </div>
-
-
-                <div className="loading-answer">
-
-                  <LoaderCircle
-                    size={22}
-                    className="spinner"
-                  />
-
-
-                  <div>
-
-                    <strong>
-                      Searching FMT material
-                    </strong>
-
-                    <span>
-                      Generating your answer...
-                    </span>
-
-                  </div>
-
-                </div>
+                </button>
 
               </div>
 
-            )}
+              <p className="chat-disclaimer">
+                FMT@Fingertips is an educational assistant.
+                Always verify important medical and legal
+                information with authoritative sources.
+              </p>
 
+            </div>
 
-            <div
-              ref={chatEndRef}
-            />
-
-          </div>
-
-        </div>
-
-
-        {/* ================================================= */}
-        {/* INPUT */}
-        {/* ================================================= */}
-
-        <div className="chat-input-area">
-
-          <div className="chat-input-box">
-
-
-            <button
-              className="attach-btn"
-              type="button"
-            >
-              <Paperclip size={21} />
-            </button>
-
-
-            <textarea
-              ref={textareaRef}
-
-              value={question}
-
-              onChange={(event) =>
-                setQuestion(
-                  event.target.value
-                )
-              }
-
-              onKeyDown={handleKeyDown}
-
-              placeholder={`Ask your ${level} FMT question...`}
-
-              rows="1"
-
-              disabled={loading}
-            />
-
-
-            <button
-              className="send-btn"
-
-              onClick={sendQuestion}
-
-              disabled={
-                loading ||
-                !question.trim()
-              }
-            >
-
-              {loading ? (
-
-                <LoaderCircle
-                  size={20}
-                  className="spinner"
-                />
-
-              ) : (
-
-                <Send size={20} />
-
-              )}
-
-            </button>
-
-          </div>
-
-
-          <p className="chat-disclaimer">
-
-            FMT@Fingertips is an educational assistant.
-            Always verify important medical and legal
-            information with authoritative sources.
-
-          </p>
-
-        </div>
-
-        </>
+          </>
         )}
 
-
         {/* ================================================= */}
-        {/* HISTORY VIEW (embedded — sidebar stays untouched) */}
+        {/* HISTORY */}
         {/* ================================================= */}
 
         {view === "history" && (
-
           <div className="history-embedded">
 
             <div className="history-heading">
 
               <div>
-                <h1>Search History</h1>
+                <h1>
+                  Search History
+                </h1>
 
                 <p>
                   Revisit your previous FMT questions and conversations.
@@ -1795,9 +2161,14 @@ export default function Chat() {
 
               <button
                 className="new-chat-button"
-                onClick={handleNewChat}
+                onClick={
+                  handleNewChat
+                }
               >
-                <Plus size={16} />
+                <Plus
+                  size={16}
+                />
+
                 New Chat
               </button>
 
@@ -1805,94 +2176,108 @@ export default function Chat() {
 
             <div className="history-card">
 
-              {/* Search */}
-
               <div className="history-search">
 
-                <Search size={16} />
+                <Search
+                  size={16}
+                />
 
                 <input
                   type="text"
                   placeholder="Search your previous questions..."
-                  value={historySearch}
-                  onChange={(event) =>
-                    setHistorySearch(event.target.value)
+                  value={
+                    historySearch
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    setHistorySearch(
+                      event.target
+                        .value
+                    )
                   }
                 />
 
               </div>
 
-              {/* Loading */}
-
               {historyLoading && (
                 <div className="history-empty">
-                  <p>Loading your history...</p>
+                  <p>
+                    Loading your history...
+                  </p>
                 </div>
               )}
 
-              {/* History List */}
-
               {!historyLoading &&
-                filteredHistory.length > 0 && (
-
+                filteredHistory.length >
+                  0 && (
                   <div className="history-list">
 
-                    {filteredHistory.map((item) => (
-
-                      <div
-                        className="history-item"
-                        key={item.id}
-                      >
-
-                        <button
-                          className="history-question"
-                          onClick={() =>
-                            handleOpenHistoryItem(
-                              item.question
-                            )
+                    {filteredHistory.map(
+                      (item) => (
+                        <div
+                          className="history-item"
+                          key={
+                            item.id
                           }
                         >
 
-                          <div className="history-question-icon">
-                            <MessageSquare size={16} />
-                          </div>
+                          <button
+                            className="history-question"
+                            onClick={() =>
+                              handleOpenHistoryItem(
+                                item.question
+                              )
+                            }
+                          >
 
-                          <div className="history-question-text">
+                            <div className="history-question-icon">
+                              <MessageSquare
+                                size={16}
+                              />
+                            </div>
 
-                            <h3>
-                              {item.question}
-                            </h3>
+                            <div className="history-question-text">
 
-                            <span>
-                              {formatHistoryDate(
-                                item.created_at
-                              )}{" "}
-                              •{" "}
-                              {formatTime(
-                                item.created_at
-                              )}
-                            </span>
+                              <h3>
+                                {
+                                  item.question
+                                }
+                              </h3>
 
-                          </div>
+                              <span>
+                                {
+                                  formatHistoryDate(
+                                    item.created_at
+                                  )
+                                }
 
-                        </button>
+                                {" • "}
 
-                      </div>
+                                {formatTime(
+                                  item.created_at
+                                )}
+                              </span>
 
-                    ))}
+                            </div>
+
+                          </button>
+
+                        </div>
+                      )
+                    )}
 
                   </div>
-
                 )}
 
-              {/* No history */}
-
               {!historyLoading &&
-                filteredHistory.length === 0 && (
-
+                filteredHistory.length ===
+                  0 && (
                   <div className="history-empty">
 
-                    <MessageSquare size={28} />
+                    <MessageSquare
+                      size={28}
+                    />
 
                     <h3>
                       {historySearch
@@ -1907,24 +2292,25 @@ export default function Chat() {
                     </p>
 
                   </div>
-
                 )}
 
             </div>
 
-            {/* Clear History */}
-
             {!historyLoading &&
-              historyItems.length > 0 && (
-
+              historyItems.length >
+                0 && (
                 <button
                   className="clear-history-button"
-                  onClick={handleClearHistory}
+                  onClick={
+                    handleClearHistory
+                  }
                 >
-                  <Trash2 size={16} />
+                  <Trash2
+                    size={16}
+                  />
+
                   Clear History
                 </button>
-
               )}
 
             <p className="history-note">
@@ -1933,143 +2319,199 @@ export default function Chat() {
             </p>
 
           </div>
-
         )}
 
-
         {/* ================================================= */}
-        {/* PROFILE VIEW (embedded — sidebar stays untouched) */}
+        {/* PROFILE */}
         {/* ================================================= */}
 
         {view === "profile" && (
-
           <div className="profile-embedded">
 
             <div className="profile-heading">
 
               <div>
-                <h1>Your Profile</h1>
+
+                <h1>
+                  Your Profile
+                </h1>
 
                 <p>
                   Manage your account details and preferences.
                 </p>
+
               </div>
 
             </div>
 
-            {/* Loading */}
-
             {profileLoading && (
               <div className="history-empty">
-                <p>Loading your profile...</p>
+                <p>
+                  Loading your profile...
+                </p>
               </div>
             )}
 
-            {/* Loaded */}
+            {!profileLoading &&
+              profileData && (
+                <div className="profile-card">
 
-            {!profileLoading && profileData && (
+                  <div className="profile-header">
 
-              <div className="profile-card">
-
-                <div className="profile-header">
-
-                  <div className="profile-avatar">
-                    <User size={38} />
-                  </div>
-
-                  <div>
-                    <h1>{profileData.username}</h1>
-                    <p>{profileData.email}</p>
-                  </div>
-
-                </div>
-
-                <div className="profile-section">
-
-                  <h2>Account Information</h2>
-
-                  <div className="profile-info">
-
-                    <div className="profile-info-item">
-
-                      <div className="profile-info-icon">
-                        <User size={18} />
-                      </div>
-
-                      <div>
-                        <span>Username</span>
-                        <strong>{profileData.username}</strong>
-                      </div>
-
+                    <div className="profile-avatar">
+                      <User
+                        size={38}
+                      />
                     </div>
 
-                    <div className="profile-info-item">
+                    <div>
 
-                      <div className="profile-info-icon">
-                        <Mail size={18} />
-                      </div>
+                      <h1>
+                        {
+                          profileData.username
+                        }
+                      </h1>
 
-                      <div>
-                        <span>Email</span>
-                        <strong>{profileData.email}</strong>
-                      </div>
-
-                    </div>
-
-                    <div className="profile-info-item">
-
-                      <div className="profile-info-icon">
-                        <Calendar size={18} />
-                      </div>
-
-                      <div>
-                        <span>Account ID</span>
-                        <strong>{profileData.id}</strong>
-                      </div>
+                      <p>
+                        {
+                          profileData.email
+                        }
+                      </p>
 
                     </div>
 
                   </div>
 
-                </div>
+                  <div className="profile-section">
 
-                <div className="profile-section">
+                    <h2>
+                      Account Information
+                    </h2>
 
-                  <h2>Quick Actions</h2>
+                    <div className="profile-info">
+
+                      <div className="profile-info-item">
+
+                        <div className="profile-info-icon">
+                          <User
+                            size={18}
+                          />
+                        </div>
+
+                        <div>
+                          <span>
+                            Username
+                          </span>
+
+                          <strong>
+                            {
+                              profileData.username
+                            }
+                          </strong>
+                        </div>
+
+                      </div>
+
+                      <div className="profile-info-item">
+
+                        <div className="profile-info-icon">
+                          <Mail
+                            size={18}
+                          />
+                        </div>
+
+                        <div>
+                          <span>
+                            Email
+                          </span>
+
+                          <strong>
+                            {
+                              profileData.email
+                            }
+                          </strong>
+                        </div>
+
+                      </div>
+
+                      <div className="profile-info-item">
+
+                        <div className="profile-info-icon">
+                          <Calendar
+                            size={18}
+                          />
+                        </div>
+
+                        <div>
+                          <span>
+                            Account ID
+                          </span>
+
+                          <strong>
+                            {
+                              profileData.id
+                            }
+                          </strong>
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  <div className="profile-section">
+
+                    <h2>
+                      Quick Actions
+                    </h2>
+
+                    <button
+                      className="profile-action"
+                      onClick={() =>
+                        setView(
+                          "history"
+                        )
+                      }
+                    >
+
+                      <div>
+                        <History
+                          size={16}
+                        />
+                      </div>
+
+                      <span>
+                        View Search History
+                      </span>
+
+                    </button>
+
+                  </div>
 
                   <button
-                    className="profile-action"
-                    onClick={() => setView("history")}
+                    className="logout-button"
+                    onClick={
+                      handleLogout
+                    }
                   >
-                    <div>
-                      <History size={16} />
-                    </div>
+                    <LogOut
+                      size={16}
+                    />
 
-                    <span>View Search History</span>
+                    Logout
                   </button>
 
                 </div>
-
-                <button
-                  className="logout-button"
-                  onClick={handleLogout}
-                >
-                  <LogOut size={16} />
-                  Logout
-                </button>
-
-              </div>
-
-            )}
-
-            {/* Failed to load */}
+              )}
 
             {!profileLoading &&
               !profileData && (
-
                 <div className="history-empty">
 
-                  <User size={28} />
+                  <User
+                    size={28}
+                  />
 
                   <h3>
                     Unable to load profile
@@ -2080,7 +2522,6 @@ export default function Chat() {
                   </p>
 
                 </div>
-
               )}
 
             <p className="profile-footer">
@@ -2089,11 +2530,9 @@ export default function Chat() {
             </p>
 
           </div>
-
         )}
 
       </main>
-
     </div>
   );
 }
