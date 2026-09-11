@@ -29,6 +29,10 @@ import {
   Search,
   Menu,
   X,
+  Share2,
+  HelpCircle,
+  Zap,
+  Sparkles,
 } from "lucide-react";
 
 import "../styles/chat.css";
@@ -36,12 +40,21 @@ import "../styles/history.css";
 import "../styles/profile.css";
 
 const API_URL =
-  (window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1")
-    ? "http://127.0.0.1:8000/ask/stream/"
-    : "https://fmt-fingertips-backend.onrender.com/ask/stream/";
+  "https://fmt-fingertips-backend.onrender.com/ask/stream/";
 
 const CHAT_STORAGE_KEY = "fmt_recent_chats";
+
+// FIX: this was referenced in the sidebar's "FMT MODULES" list but
+// never defined anywhere, so the component threw a ReferenceError
+// on every render. Names match what's shown in the design mockup.
+const FMT_MODULES = [
+  "Postmortem & Putrefaction",
+  "Rigor Mortis & Algor Mortis",
+  "Mechanical Asphyxia & Drowning",
+  "Forensic Toxicology & Antidotes",
+  "Medico-legal Autopsy Protocol",
+  "Medical Jurisprudence & Ethics",
+];
 
 export default function Chat() {
   const location = useLocation();
@@ -59,6 +72,10 @@ export default function Chat() {
   const [studentMenuOpen, setStudentMenuOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Cosmetic toggle shown in the sidebar footer (mockup: "Exam Drill Mode").
+  // Not wired to any backend behaviour yet - purely a UI affordance for now.
+  const [examDrillMode, setExamDrillMode] = useState(true);
+
   const [view, setView] = useState("chat");
 
   const [historySearch, setHistorySearch] = useState("");
@@ -73,6 +90,13 @@ export default function Chat() {
   const hasHandledIncomingQuestion = useRef(false);
 
   const navigate = useNavigate();
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+    setOpenChatMenu(null);
+    setStudentMenuOpen(false);
+  };
+
   // =========================================================
   // LOAD SAVED CHATS
   // =========================================================
@@ -207,6 +231,60 @@ export default function Chat() {
     );
 
     return text.trim();
+  };
+
+  // =========================================================
+  // MARKDOWN SECTION ICONS
+  // =========================================================
+  //
+  // The mockup gives each "## N. Section Title" heading in an
+  // answer its own small icon (lightning bolt for rapid revision,
+  // question mark for viva prep, etc). We infer the icon from
+  // keywords in the heading text so the backend doesn't need to
+  // send anything beyond plain markdown.
+  // =========================================================
+
+  const getSectionIcon = (headingText) => {
+    const text = String(headingText).toLowerCase();
+
+    if (text.includes("viva") || text.includes("practical")) {
+      return <HelpCircle size={15} />;
+    }
+
+    if (text.includes("rapid") || text.includes("revision")) {
+      return <Zap size={15} />;
+    }
+
+    return <Sparkles size={15} />;
+  };
+
+  // Custom renderers so headings/blockquotes in an assistant
+  // answer pick up the "card" treatment shown in the mockup.
+  const markdownComponents = {
+    h2({ children, ...props }) {
+      const text = Array.isArray(children)
+        ? children.join("")
+        : String(children);
+
+      return (
+        <h2 className="answer-section-heading" {...props}>
+          <span className="answer-section-icon">
+            {getSectionIcon(text)}
+          </span>
+          <span>{children}</span>
+        </h2>
+      );
+    },
+    blockquote({ children, ...props }) {
+      return (
+        <blockquote className="answer-viva-block" {...props}>
+          <span className="answer-viva-icon">
+            <HelpCircle size={14} />
+          </span>
+          <div>{children}</div>
+        </blockquote>
+      );
+    },
   };
 
   // =========================================================
@@ -515,43 +593,6 @@ export default function Chat() {
   };
 
   // =========================================================
-  // REFRESH ACCESS TOKEN
-  // =========================================================
-
-  const refreshAccessToken = async () => {
-    const refreshToken = localStorage.getItem("refresh");
-
-    if (!refreshToken) return null;
-
-    try {
-      const response = await fetch(
-        "https://fmt-fingertips-backend.onrender.com/token/refresh/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            refresh: refreshToken,
-          }),
-        }
-      );
-
-      if (!response.ok) return null;
-
-      const data = await response.json();
-
-      if (!data?.access) return null;
-
-      localStorage.setItem("access", data.access);
-      return data.access;
-    } catch (error) {
-      console.error("Token refresh error:", error);
-      return null;
-    }
-  };
-
-  // =========================================================
   // SEND QUESTION
   // =========================================================
 
@@ -635,45 +676,43 @@ export default function Chat() {
     }
 
     try {
-      const requestOptions = (accessToken) => ({
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          question: trimmedQuestion,
-          level: effectiveLevel,
-        }),
-      });
-
-      let response = await fetch(
-        API_URL,
-        requestOptions(token)
-      );
-
-      // If the access token expired, refresh it once and retry.
-      if (response.status === 401) {
-        const newAccessToken = await refreshAccessToken();
-
-        if (!newAccessToken) {
-          localStorage.removeItem("access");
-          localStorage.removeItem("refresh");
-          window.location.href = "/login";
-          return;
-        }
-
-        response = await fetch(
+      const response =
+        await fetch(
           API_URL,
-          requestOptions(newAccessToken)
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+              question:
+                trimmedQuestion,
+              level:
+                effectiveLevel,
+            }),
+          }
         );
 
-        if (response.status === 401) {
-          localStorage.removeItem("access");
-          localStorage.removeItem("refresh");
-          window.location.href = "/login";
-          return;
-        }
+      if (
+        response.status === 401
+      ) {
+        localStorage.removeItem(
+          "access"
+        );
+        localStorage.removeItem(
+          "refresh"
+        );
+
+        window.location.href =
+          "/login";
+
+        return;
       }
 
       if (!response.ok) {
@@ -1108,7 +1147,6 @@ export default function Chat() {
     setActiveChatId(null);
     setOpenChatMenu(null);
     setView("chat");
-    setSidebarOpen(false);
 
     setTimeout(() => {
       textareaRef.current?.focus();
@@ -1281,6 +1319,7 @@ export default function Chat() {
   };
 
   const handleProfile = () => {
+    closeSidebar();
     setStudentMenuOpen(false);
     setView("profile");
   };
@@ -1303,18 +1342,25 @@ export default function Chat() {
   };
 
   // =========================================================
-  // MOBILE / TABLET / DESKTOP DRAWER
+  // SHARE (mockup shows a Share button in the topbar)
   // =========================================================
 
-  const closeSidebar = () => {
-    setSidebarOpen(false);
-    setOpenChatMenu(null);
-  };
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "FMT@Fingertips",
+          text: "Check out this FMT study session.",
+          url: window.location.href,
+        });
+        return;
+      }
 
-  const handleDrawerView = (nextView) => {
-    setOpenChatMenu(null);
-    setView(nextView);
-    setSidebarOpen(false);
+      await navigator.clipboard.writeText(window.location.href);
+      alert("Link copied to clipboard.");
+    } catch {
+      // User cancelled the share sheet or clipboard was blocked - no-op.
+    }
   };
 
   // =========================================================
@@ -1333,28 +1379,20 @@ export default function Chat() {
       {/* SIDEBAR */}
       {/* ================================================= */}
 
-      <aside
-        className={
-          sidebarOpen
-            ? "chat-sidebar open"
-            : "chat-sidebar"
-        }
-        aria-hidden={!sidebarOpen}
-      >
+      {sidebarOpen && (
+        <button
+          type="button"
+          className="sidebar-overlay"
+          aria-label="Close navigation menu"
+          onClick={closeSidebar}
+        />
+      )}
 
-        {/* DRAWER HEADER */}
+      <aside className={`chat-sidebar ${sidebarOpen ? "open" : ""}`}>
+
+        {/* BRAND (+ close button, visible while the drawer is open) */}
 
         <div className="sidebar-drawer-header">
-          <button
-            type="button"
-            className="sidebar-close-btn"
-            onClick={closeSidebar}
-            aria-label="Close navigation"
-            title="Close navigation"
-          >
-            <X size={24} />
-          </button>
-
           <button
             type="button"
             className="sidebar-brand"
@@ -1373,6 +1411,15 @@ export default function Chat() {
               <span>Forensic Medicine Assistant</span>
             </div>
           </button>
+
+          <button
+            type="button"
+            className="sidebar-close-btn"
+            onClick={closeSidebar}
+            aria-label="Close navigation menu"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {/* NEW CHAT */}
@@ -1380,14 +1427,14 @@ export default function Chat() {
         <button
           className="new-chat-btn"
           onClick={() => {
-            handleNewChat();
             closeSidebar();
+            handleNewChat();
           }}
         >
           <Plus size={19} />
 
           <span>
-            New Chat
+            New Study Session
           </span>
         </button>
 
@@ -1401,9 +1448,10 @@ export default function Chat() {
                 ? "active"
                 : ""
             }
-            onClick={() =>
-              handleDrawerView("history")
-            }
+            onClick={() => {
+              closeSidebar();
+              setView("history");
+            }}
           >
             <History size={19} />
 
@@ -1418,9 +1466,10 @@ export default function Chat() {
                 ? "active"
                 : ""
             }
-            onClick={() =>
-              handleDrawerView("profile")
-            }
+            onClick={() => {
+              closeSidebar();
+              setView("profile");
+            }}
           >
             <User size={19} />
 
@@ -1440,6 +1489,33 @@ export default function Chat() {
           </button>
 
         </nav>
+
+        {/* FMT MODULES */}
+
+        <div className="fmt-module-section">
+          <div className="fmt-module-title">
+            FMT MODULES
+          </div>
+
+          <div className="fmt-module-list">
+            {FMT_MODULES.map((module) => (
+              <button
+                type="button"
+                className="fmt-module-item"
+                key={module}
+                onClick={() => {
+                  closeSidebar();
+                  setView("chat");
+                  setQuestion(`Tell me about ${module}`);
+                  setTimeout(() => textareaRef.current?.focus(), 50);
+                }}
+              >
+                <span className="fmt-module-dot" />
+                <span>{module}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* RECENT CHATS */}
 
@@ -1497,11 +1573,10 @@ export default function Chat() {
                       title={
                         chat.title
                       }
-                      onClick={() =>
-                        openChat(
-                          chat
-                        )
-                      }
+                      onClick={() => {
+                        closeSidebar();
+                        openChat(chat);
+                      }}
                     >
                       <span className="recent-chat-title">
                         {
@@ -1616,9 +1691,10 @@ export default function Chat() {
 
           <button
             className="switch-mode-btn"
-            onClick={
-              switchLevel
-            }
+            onClick={() => {
+              closeSidebar();
+              switchLevel();
+            }}
           >
             Switch to{" "}
             {level === "UG"
@@ -1632,16 +1708,50 @@ export default function Chat() {
 
         </div>
 
-      </aside>
+        {/* EXAM DRILL MODE + FOOTER LINKS */}
 
-      {sidebarOpen && (
-        <button
-          type="button"
-          className="sidebar-overlay"
-          onClick={closeSidebar}
-          aria-label="Close navigation overlay"
-        />
-      )}
+        <div className="sidebar-footer">
+
+          <div className="exam-drill-row">
+            <span>
+              <span className="exam-drill-badge">UG</span>
+              Exam Drill Mode
+            </span>
+
+            <button
+              type="button"
+              className={
+                examDrillMode
+                  ? "exam-drill-switch active"
+                  : "exam-drill-switch"
+              }
+              onClick={() =>
+                setExamDrillMode((previous) => !previous)
+              }
+              aria-pressed={examDrillMode}
+              aria-label="Toggle exam drill mode"
+            >
+              <span className="exam-drill-knob" />
+            </button>
+          </div>
+
+          <div className="sidebar-footer-links">
+            <button
+              type="button"
+              onClick={clearAllChats}
+            >
+              Clear history
+            </button>
+
+            <button type="button">
+              <Settings size={13} />
+              Settings
+            </button>
+          </div>
+
+        </div>
+
+      </aside>
 
       {/* ================================================= */}
       {/* MAIN */}
@@ -1655,13 +1765,23 @@ export default function Chat() {
 
           <button
             type="button"
-            className="menu-toggle-btn"
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Open navigation"
-            title="Open navigation"
+            className="mobile-menu-button"
+            onClick={() => setSidebarOpen((previous) => !previous)}
+            aria-label={sidebarOpen ? "Close navigation menu" : "Open navigation menu"}
+            title={sidebarOpen ? "Close menu" : "Open menu"}
           >
-            <Menu size={25} />
+            {sidebarOpen ? <X size={25} /> : <Menu size={25} />}
           </button>
+
+          <div className="topbar-title">
+            <span className="topbar-live-dot" />
+            <strong>FMT Assistant</strong>
+
+            <span className="topbar-level-pill">
+              {level} Learning
+              <ChevronDown size={13} />
+            </span>
+          </div>
 
           <div className="mobile-brand">
 
@@ -1682,6 +1802,36 @@ export default function Chat() {
           </div>
 
           <div className="topbar-right">
+
+            {/* SEARCH */}
+
+            <button
+              type="button"
+              className="topbar-icon-btn"
+              title="Search"
+              onClick={() => {
+                setView("history");
+                setTimeout(() => {
+                  document
+                    .querySelector(".history-search input")
+                    ?.focus();
+                }, 50);
+              }}
+            >
+              <Search size={17} />
+            </button>
+
+            {/* SHARE */}
+
+            <button
+              type="button"
+              className="topbar-share-btn"
+              title="Share"
+              onClick={handleShare}
+            >
+              <Share2 size={15} />
+              <span>Share</span>
+            </button>
 
             {/* DARK MODE */}
 
@@ -1721,12 +1871,6 @@ export default function Chat() {
 
                 </div>
               </div>
-
-              <span>
-                {darkMode
-                  ? "Light"
-                  : "Dark"}
-              </span>
 
             </button>
 
@@ -1989,6 +2133,9 @@ export default function Chat() {
                                   remarkPlugins={[
                                     remarkGfm,
                                   ]}
+                                  components={
+                                    markdownComponents
+                                  }
                                 >
                                   {cleanAssistantContent(
                                     message.content
@@ -1997,11 +2144,8 @@ export default function Chat() {
 
                               </div>
 
-                              {/* SOURCES HIDDEN
-                                  Retrieval still happens in the backend.
-                                  Source/chunk information is intentionally
-                                  not displayed in the student UI. */}
                             </div>
+
                           </>
                         )}
 
