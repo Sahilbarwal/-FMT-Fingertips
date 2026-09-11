@@ -1781,125 +1781,16 @@ button:disabled {
 }
 
 /* =========================================================
-   DARK MODE — ORANGE/AMBER ACCENT OVERRIDE
-   Everything above is untouched. This block only swaps the
-   teal/green accent used in dark mode for a warm amber/orange
-   accent, wherever it showed up (badges, pill, section-heading
-   cards, viva callout, table headers, module dot, mode card,
-   toggles). Light mode is unaffected.
+   DARK MODE — AMBER ANSWER-TEXT HIGHLIGHT ONLY
+   Everything above is the original teal/green dark theme,
+   untouched (badges, pill, icons, module dot, mode card,
+   toggles all stay teal). The only change here: the bold
+   key-term text inside answer bullet points (e.g. "Cause of
+   death", "Putrefaction:") is amber/yellow instead of teal.
    ========================================================= */
 
-.chat-app.dark {
-  --fmt-accent: #f59e0b;
-  --fmt-accent-2: #fb923c;
-  --fmt-mint: #3a2711;
-}
-
-.chat-app.dark .topbar-level-pill {
-  background: #3a2711;
-  color: #f5a623;
-}
-
-.chat-app.dark .topbar-icon-btn:hover {
-  color: #f5a623;
-}
-
-.chat-app.dark .topbar-share-btn:hover {
-  color: #f5a623;
-  border-color: #7a5322;
-}
-
-.chat-app.dark .mobile-brand-icon {
-  background: #3a2711;
-  color: #f5a623;
-}
-
-.chat-app.dark .assistant-avatar,
-.chat-app.dark .welcome-icon,
-.chat-app.dark .mode-card-icon,
-.chat-app.dark .sidebar-brand .brand-icon {
-  background: #3a2711;
-  color: #f5a623;
-}
-
-.chat-app.dark .level-badge {
-  background: #3a2711;
-  color: #f5a623;
-}
-
-.chat-app.dark .exam-drill-badge {
-  background: #3a2711;
-  color: #f5a623;
-}
-
-.chat-app.dark .exam-drill-switch.active {
-  background: #f59e0b;
-}
-
-.chat-app.dark .theme-switch.active {
-  background: #f59e0b;
-}
-
-.chat-app.dark .theme-switch-knob {
-  color: #f59e0b;
-}
-
-.chat-app.dark .switch-mode-btn {
-  background: #3a2711;
-  color: #f5a623;
-}
-
-.chat-app.dark .switch-mode-btn:hover {
-  background: #4a3316;
-}
-
-.chat-app.dark .fmt-module-item:first-child .fmt-module-dot {
-  background: #f59e0b;
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, .16);
-}
-
-.chat-app.dark .assistant-answer .answer-section-heading {
-  background: #3a2711;
-  color: #ffd9a0;
-}
-
-.chat-app.dark .assistant-answer .answer-section-icon {
-  background: #101214;
-  color: #f5a623;
-}
-
-.chat-app.dark .assistant-answer .answer-section-heading + ul,
-.chat-app.dark .assistant-answer .answer-section-heading + p,
-.chat-app.dark .assistant-answer .answer-section-heading + p + ul {
-  background: #201509;
-  border-color: #4a3316;
-}
-
-.chat-app.dark .assistant-answer .answer-viva-block {
-  border-left-color: #f5a623;
-}
-
-.chat-app.dark .assistant-answer .answer-viva-icon {
-  color: #f5a623;
-}
-
-.chat-app.dark .assistant-answer .answer-viva-block em {
-  color: #ffcf87;
-}
-
 .chat-app.dark .assistant-answer li strong {
-  color: #ffd9a0;
-}
-
-.chat-app.dark .assistant-answer th {
-  background: #3a2711;
   color: #f5a623;
-}
-
-.chat-app.dark .welcome-state .suggestion-grid button:hover {
-  background: #241a0c;
-  border-color: #7a5322;
 }
 
 /* =========================
