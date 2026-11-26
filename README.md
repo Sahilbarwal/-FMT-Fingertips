@@ -268,17 +268,5 @@ Potential areas for further development include:
 - Improved monitoring, logging and error handling.
 - More robust evaluation of factual accuracy and hallucination risks.
 
-## 12. Screenshots
-
-Add application screenshots here to demonstrate:
-
-- Home page
-- UG/PG selection
-- Chat interface
-- Generated academic responses
-- Conversation history
-- User profile
-
----
 
 **FMT@Fingertips — Making Forensic Medicine learning more structured, accessible and interactive.**
