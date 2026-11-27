@@ -1,133 +1,200 @@
-# FMT@Fingertips — Frontend
+# FMT@Fingertips – Frontend
 
-**A React-based web application for an AI-powered Forensic Medicine and Toxicology (FMT) learning assistant.**
+**A React-based frontend for an AI-powered Forensic Medicine and Toxicology (FMT) learning assistant.**
 
-FMT@Fingertips provides an interactive learning platform for undergraduate and postgraduate medical students. It allows users to ask subject-related questions, explore concepts through AI-generated explanations, and revisit previous learning sessions.
+FMT@Fingertips is a web-based learning platform designed for undergraduate and postgraduate medical students. The frontend provides an interactive interface for asking FMT-related questions, exploring AI-generated explanations, managing study sessions, and accessing personal learning history.
 
-The frontend is built using React and Vite and communicates with a Django REST Framework backend for authentication, conversation history, and AI-powered responses.
+Built using **React 19 and Vite**, the frontend focuses on component-based development, client-side routing, authentication state management, API integration, and responsive user experience.
 
 **Live Application:** https://fmt-fingertips.vercel.app
 
-**Main Repository:** https://github.com/Sahilbarwal/-FMT-Fingertips
-
-**Backend:** Django REST Framework
+**GitHub Repository:** https://github.com/Sahilbarwal/-FMT-Fingertips
 
 ---
 
-## 1. Application Overview
+## 1. Frontend Overview
 
-FMT@Fingertips is designed to make Forensic Medicine and Toxicology learning more accessible through an AI-powered conversational interface.
+The frontend serves as the primary user interface of FMT@Fingertips, connecting students with the application's AI-powered learning functionality.
 
-The application supports two learning levels:
+It provides:
 
-- **Undergraduate (UG):** Exam-oriented explanations designed for undergraduate medical students.
-- **Postgraduate (PG):** Advanced and detailed explanations for postgraduate medical learning.
+- A dedicated interface for UG and PG learning modes.
+- An interactive conversational interface.
+- User registration and login screens.
+- Protected navigation for authenticated users.
+- Personal search history and conversation navigation.
+- User profile management.
+- Light and dark theme support.
 
-Users can interact with the learning assistant, manage their accounts, and access previously saved questions and conversations.
+The frontend communicates with a separately deployed Django REST Framework backend through HTTP API requests.
 
 ## 2. Application Screenshots
 
-The following screenshots showcase the frontend interface and its major functionalities.
-
-### 2.1 Login Page
+### 2.1 Login Interface
 
 <p align="center">
-  <img src="FMT_Frontend_Outputs/Screenshot%202026-11-27%20051229.png" width="750" alt="FMT@Fingertips Login Page">
+  <img src="FMT_Frontend_Outputs/Screenshot%202026-11-27%20051229.png" width="750" alt="FMT@Fingertips Login Interface">
 </p>
 
-The login interface allows registered users to securely access their accounts using email and password credentials.
+A clean authentication interface that allows users to sign in using their registered email and password.
 
-### 2.2 Home Page – Learning Level Selection
+### 2.2 Home Page and Learning Mode Selection
 
 <p align="center">
-  <img src="FMT_Frontend_Outputs/Screenshot%202026-11-27%20113327.png" width="900" alt="FMT@Fingertips Home Page">
+  <img src="FMT_Frontend_Outputs/Screenshot%202026-11-27%20113327.png" width="950" alt="FMT@Fingertips Home Page">
 </p>
 
-The home page provides an overview of the learning assistant and allows users to choose between Undergraduate (UG) and Postgraduate (PG) learning modes.
+The home page introduces the learning assistant and provides separate learning modes:
 
-### 2.3 AI-Powered Chat Interface
+- **UG Mode:** Exam-oriented explanations for undergraduate medical students.
+- **PG Mode:** More advanced and detailed explanations for postgraduate medical students.
+
+### 2.3 AI Chat Interface
 
 <p align="center">
-  <img src="FMT_Frontend_Outputs/Screenshot%202026-11-27%20113518.png" width="900" alt="FMT@Fingertips AI Chat Interface">
+  <img src="FMT_Frontend_Outputs/Screenshot%202026-11-27%20113518.png" width="950" alt="FMT@Fingertips Chat Interface">
 </p>
 
-<p align="center">
-  <img src="FMT_Frontend_Outputs/Screenshot%202026-11-27 111130.png" width="900" alt="FMT@Fingertips AI Chat Interface">
-</p>
+The primary interaction interface, allowing users to submit questions and view AI-generated answers.
 
-The chat interface is the primary learning environment, where users submit Forensic Medicine questions and receive structured AI-generated responses.
-
-Features include:
-- Interactive conversational interface.
-- Streaming AI-generated responses.
+Frontend functionality includes:
+- Dynamic chat interface.
+- Streaming response presentation.
 - Markdown-based answer rendering.
-- UG and PG learning modes.
-- Recent conversation navigation.
-- New study session functionality.
+- Conversation navigation through the sidebar.
+- New study session controls.
+- Learning-mode selection.
+- Interactive message input.
 
-### 2.4 Search History
+### 2.4 Search History Interface
 
 <p align="center">
-  <img src="FMT_Frontend_Outputs/Screenshot%202026-11-27%20113533.png" width="900" alt="FMT@Fingertips Search History">
+  <img src="FMT_Frontend_Outputs/Screenshot%202026-11-27%20113533.png" width="950" alt="FMT@Fingertips Search History">
 </p>
 
-The search history page allows users to revisit previous questions and conversations.
+A dedicated page for accessing previously submitted questions and conversations.
 
-Features include:
-- View previously saved questions.
-- Search through previous queries.
-- Open previous conversations.
+Features:
+- Display previously saved questions.
+- Search and filter previous queries.
+- Navigate back to previous learning sessions.
 - Clear search history.
 
-### 2.5 User Profile
+### 2.5 User Profile Interface
 
 <p align="center">
-  <img src="FMT_Frontend_Outputs/Screenshot%202026-11-27%20113602.png" width="900" alt="FMT@Fingertips User Profile">
+  <img src="FMT_Frontend_Outputs/Screenshot%202026-11-27%20113602.png" width="950" alt="FMT@Fingertips User Profile">
 </p>
 
-The profile page displays account information and provides quick access to search history and logout functionality.
+The profile interface displays account information and provides quick access to search history and logout functionality.
+
+### 2.6 Frontend Production Deployment
+
+<p align="center">
+  <img src="FMT_Frontend_Outputs/Screenshot%202026-11-27%20111130.png" width="950" alt="FMT@Fingertips Vercel Deployment">
+</p>
+
+The frontend is deployed through Vercel and connected to the GitHub repository for production deployments.
 
 ---
 
-## 3. Key Features
+## 3. Frontend Features and Implementation
 
-### User Authentication
-- User registration and login.
-- Email-based authentication.
+### 3.1 Component-Based Architecture
+
+The application follows a modular React architecture.
+
+Reusable components are used to separate interface elements and simplify maintenance.
+
+Examples include:
+- `ChatBox.jsx` – Chat interface.
+- `InputBox.jsx` – User question input.
+- `Message.jsx` – Message rendering.
+- `Sidebar.jsx` – Navigation and recent conversations.
+- `Navbar.jsx` – Application navigation.
+- `Loading.jsx` – Loading interface.
+- `SearchHistory.jsx` – Search history components.
+
+### 3.2 State Management
+
+React Context API is used to manage shared application state.
+
+The frontend contains separate context modules:
+
+- **AuthContext:** Manages authentication-related state.
+- **ChatContext:** Manages chat and conversation-related state.
+- **ThemeContext:** Manages light and dark theme preferences.
+
+This separation helps keep application state organised across different pages and components.
+
+### 3.3 Client-Side Routing
+
+React Router DOM handles navigation between application pages.
+
+The `ProtectedRoute` component restricts access to authenticated sections.
+
+| Route | Component | Access |
+|---|---|---|
+| `/login` | Login | Public |
+| `/register` | Register | Public |
+| `/` | Home | Protected |
+| `/chat` | Chat | Protected |
+| `/history` | History | Protected |
+| `/profile` | Profile | Protected |
+
+### 3.4 Authentication Handling
+
+The frontend integrates with the backend authentication API.
+
+Implemented functionality includes:
+- User registration and login forms.
+- Email and password input handling.
 - JWT access and refresh token handling.
-- Protected routes for authenticated users.
+- Authentication state management.
+- Protected route navigation.
 - Logout functionality.
+- Browser Local Storage for authentication information.
 
-### Learning Level Selection
-- Undergraduate (UG) learning mode.
-- Postgraduate (PG) learning mode.
-- Different learning experiences based on the selected academic level.
+### 3.5 API Integration
 
-### AI-Powered Chat Interface
-- Ask questions related to Forensic Medicine and Toxicology.
-- Receive AI-generated explanations.
-- Streaming response interface.
-- Structured answer presentation using Markdown.
-- New study session functionality.
-- Recent conversation navigation.
+Axios is used for communicating with the backend.
 
-### Search History
-- Retrieve previously saved questions.
-- Search previous queries.
-- Revisit earlier learning sessions.
-- Clear personal search history.
+The API service module centralises HTTP communication between the frontend and backend.
 
-### User Profile
-- Display account information.
-- Access personal search history.
-- Logout functionality.
+**Production Backend URL:**
 
-### User Interface
-- Responsive web interface.
+`https://fmt-fingertips-backend.onrender.com`
+
+| API Endpoint | Method | Frontend Purpose |
+|---|---|---|
+| `/register/` | POST | Submit registration details |
+| `/login/` | POST | Authenticate users |
+| `/me/` | GET | Retrieve profile information |
+| `/history/` | GET | Retrieve search history |
+| `/history/` | DELETE | Clear search history |
+| `/ask/stream/` | POST | Submit questions and receive streamed responses |
+
+Authenticated requests include the JWT access token in the Authorization header.
+
+### 3.6 Dynamic Chat Rendering
+
+The chat interface supports:
+- Dynamic rendering of user and assistant messages.
+- Streaming response presentation.
+- Markdown-formatted content.
+- GitHub Flavored Markdown through Remark GFM.
+- Conversation navigation.
+- Recent chat information stored in browser Local Storage.
+
+### 3.7 UI and Theme Management
+
+The frontend provides:
 - Light and dark theme support.
-- Sidebar navigation.
-- Interactive components and icons.
-- Markdown rendering with GitHub Flavored Markdown support.
+- Responsive page layouts.
+- Sidebar-based navigation.
+- Reusable interface elements.
+- Interactive icons using Lucide React and React Icons.
+- Structured Markdown content presentation.
 
 ---
 
@@ -139,21 +206,23 @@ The profile page displays account information and provides quick access to searc
 | Build Tool | Vite |
 | Programming Language | JavaScript (ES Modules) |
 | Routing | React Router DOM |
+| State Management | React Context API |
 | HTTP Client | Axios |
 | Markdown Rendering | React Markdown |
 | Markdown Extensions | Remark GFM |
 | Icons | Lucide React, React Icons |
 | Styling | CSS |
-| Authentication | JWT |
+| Authentication Handling | JWT |
 | Browser Storage | Local Storage |
 | Code Linting | Oxlint |
 | Deployment | Vercel |
+| Version Control | Git and GitHub |
 
 ---
 
-## 5. Project Structure
+## 5. Frontend Project Structure
 
-The frontend follows a modular component-based architecture.
+The frontend follows a modular, component-based folder structure.
 
 ```text
 frontend/
@@ -162,6 +231,7 @@ frontend/
 │
 ├── FMT_Frontend_Outputs/
 │   ├── Screenshot 2026-11-27 051229.png
+│   ├── Screenshot 2026-11-27 111130.png
 │   ├── Screenshot 2026-11-27 113327.png
 │   ├── Screenshot 2026-11-27 113518.png
 │   ├── Screenshot 2026-11-27 113533.png
@@ -213,74 +283,30 @@ frontend/
 
 ---
 
-## 6. Application Routing
+## 6. Frontend and Backend Communication
 
-The application uses React Router DOM for navigation and route protection.
+The frontend and backend are maintained as separate application layers.
 
-| Route | Page | Access |
+| Layer | Technology | Responsibility |
 |---|---|---|
-| `/login` | Login | Public |
-| `/register` | Registration | Public |
-| `/` | Home | Protected |
-| `/chat` | Chat | Protected |
-| `/history` | Search History | Protected |
-| `/profile` | Profile | Protected |
+| Frontend | React + Vite | User interface and client-side interactions |
+| API Communication | Axios | HTTP requests and responses |
+| Authentication | JWT | Client-side token handling |
+| Backend | Django REST Framework | API processing and application logic |
+| Deployment | Vercel | Frontend hosting |
 
-Protected routes are handled through the `ProtectedRoute` component to restrict access to authenticated users.
-
----
-
-## 7. Backend Integration
-
-The frontend communicates with a separate Django REST Framework backend through HTTP requests.
-
-**Production Backend:**
-
-`https://fmt-fingertips-backend.onrender.com`
-
-### API Endpoints
-
-| Endpoint | Method | Functionality |
-|---|---|---|
-| `/register/` | POST | Register a new user |
-| `/login/` | POST | Authenticate a user |
-| `/me/` | GET | Retrieve user profile |
-| `/history/` | GET | Retrieve search history |
-| `/history/` | DELETE | Clear search history |
-| `/ask/stream/` | POST | Stream AI-generated responses |
-
-Authenticated requests include the JWT access token in the Authorization header.
-
-```http
-Authorization: Bearer <access-token>
-```
-
-The frontend and backend are deployed independently, with the frontend hosted on Vercel and the backend hosted on Render.
+The frontend handles the presentation and interaction layer, while backend services process authentication, search history, and AI-generated responses.
 
 ---
 
-## 8. Authentication and Data Handling
-
-The frontend implements JWT-based authentication to manage user sessions.
-
-Key implementation details:
-
-- Access and refresh tokens are handled by the authentication layer.
-- Authentication information is stored in browser Local Storage.
-- Protected routes restrict access to authenticated users.
-- User profile and search history are retrieved through backend API endpoints.
-- Recent chat information is maintained in browser storage for conversation navigation.
-
----
-
-## 9. Getting Started
+## 7. Local Development Setup
 
 ### Prerequisites
 
 - Node.js
 - npm
 - Git
-- Code editor such as Visual Studio Code
+- Visual Studio Code or another code editor
 
 ### Clone the Repository
 
@@ -306,11 +332,11 @@ npm install
 npm run dev
 ```
 
-The Vite development server will provide a local URL, typically:
+The application will be available at:
 
 `http://localhost:5173`
 
-### Build for Production
+### Create a Production Build
 
 ```bash
 npm run build
@@ -318,34 +344,32 @@ npm run build
 
 ---
 
-## 10. Deployment
+## 8. Deployment
 
-The frontend is deployed using Vercel.
+The frontend is deployed on **Vercel** and connected to the GitHub repository.
 
-**Live Application:** https://fmt-fingertips.vercel.app
+**Production URL:** https://fmt-fingertips.vercel.app
 
-The production frontend communicates with the deployed Django REST Framework backend.
-
----
-
-## 11. Future Enhancements
-
-- Improve conversational context management.
-- Enhance the learning experience for UG and PG students.
-- Improve mobile responsiveness.
-- Expand chat search and conversation management.
-- Enhance error handling and loading states.
-- Introduce additional interactive learning and revision features.
+The deployment workflow allows updated frontend code pushed to the configured GitHub branch to be deployed through Vercel.
 
 ---
 
-## 12. Project Links
+## 9. Future Improvements
 
-**Live Application:** https://fmt-fingertips.vercel.app
+- Improve responsive layouts across mobile and tablet devices.
+- Enhance chat interface interactions.
+- Improve conversation search and navigation.
+- Refine loading and error states.
+- Improve accessibility and UI consistency.
+- Introduce additional interactive learning components.
 
-**GitHub Repository:** https://github.com/Sahilbarwal/-FMT-Fingertips
+---
 
-**Backend:** Django REST Framework
+## 10. Project Links
+
+- **Live Frontend:** https://fmt-fingertips.vercel.app
+- **GitHub Repository:** https://github.com/Sahilbarwal/-FMT-Fingertips
+- **Backend Service:** Django REST Framework
 
 ---
 
