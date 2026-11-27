@@ -51,6 +51,10 @@ The home page provides an overview of the learning assistant and allows users to
   <img src="FMT_Frontend_Outputs/Screenshot%202026-11-27%20113518.png" width="900" alt="FMT@Fingertips AI Chat Interface">
 </p>
 
+<p align="center">
+  <img src="FMT_Frontend_Outputs/Screenshot%202026-11-27 111130.png" width="900" alt="FMT@Fingertips AI Chat Interface">
+</p>
+
 The chat interface is the primary learning environment, where users submit Forensic Medicine questions and receive structured AI-generated responses.
 
 Features include:
